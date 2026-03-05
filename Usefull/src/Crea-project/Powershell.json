@@ -1,0 +1,34 @@
+﻿[
+  {
+    "name": "examples",
+    "category": "Folder"
+  },
+  {
+    "name": "test",
+    "category": "Folder"
+  },
+  {
+    "name": "tools",
+    "category": "Folder"
+  },
+  {
+    "name": "docs",
+    "category": "Folder"
+  },
+  {
+    "name": "lib",
+    "category": "Folder"
+  },
+  {
+    "name": "README.md",
+    "category": "File"
+  },
+  {
+    "name": "LICENSE.txt",
+    "category": "File"
+  },
+  {
+    "name": "Main.ps1",
+    "category": "File"
+  }
+]

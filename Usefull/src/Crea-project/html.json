@@ -1,0 +1,22 @@
+﻿[
+  {
+    "name": "index.html",
+    "category": "file"
+  },
+  {
+    "name": "apps.js",
+    "category": "File"
+  },
+  {
+    "name": "style.css",
+    "category": "File"
+  },
+  {
+    "name": ".htaccess",
+    "category": "Secure"
+  },
+  {
+    "name": ".htpasswd",
+    "category": "Secure"
+  }
+]

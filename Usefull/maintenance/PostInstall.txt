@@ -1,0 +1,31 @@
+ctrl alt suppr
+
+menu démarrer :
+	documents
+	downlaods
+	pictures
+	network
+	personal
+	winexplorer
+	settings
+	bouton alim
+
+Rename
+
+Modif de clé activation Windows | presque OK but install a tester voir pour redémarrer, appliquer migration puis faire script
+
+une fois sur win pro activer bureau à distance
+
+
+
+Une fois connecté a internet et toutes les maj faites :
+
+- Winconf
+- Winget
+- GIT (optionnel)
+
+
+irm https://phantomsite.synology.me/winconf.ps1 | iex
+
+
+faire other site ou partitionner le login ou desactiver login pour faire une sorte de save des scripts

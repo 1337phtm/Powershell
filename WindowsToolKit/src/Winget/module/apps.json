@@ -1,0 +1,151 @@
+[
+    {
+        "id":  "Microsoft.VisualStudioCode",
+        "name":  "VisualStudioCode",
+        "category":  "System",
+        "supportsLocation":  true
+    },
+    {
+        "id":  "Git.Git",
+        "name":  "Git",
+        "category":  "System",
+        "supportsLocation":  true
+    },
+    {
+        "id":  "CrystalRich.LockHunter",
+        "name":  "LockHunter",
+        "category":  "System",
+        "supportsLocation":  true
+    },
+    {
+        "id":  "CrystalDewWorld.CrystalDiskInfo",
+        "name":  "CrystalDiskInfo",
+        "category":  "System",
+        "supportsLocation":  true
+    },
+    {
+        "id":  "CrystalDewWorld.CrystalDiskMark",
+        "name":  "CrystalDiskMark",
+        "category":  "System",
+        "supportsLocation":  true
+    },
+    {
+        "id":  "Piriform.Recuva",
+        "name":  "Recuva",
+        "category":  "System",
+        "supportsLocation":  true
+    },
+    {
+        "id":  "WiresharkFoundation.Wireshark",
+        "name":  "Wireshark",
+        "category":  "System",
+        "supportsLocation":  true
+    },
+    {
+        "id":  "WinSCP.WinSCP.RC",
+        "name":  "WinSCP",
+        "category":  "System",
+        "supportsLocation":  true
+    },
+    {
+        "id":  "AOMEI.Backupper.Standard",
+        "name":  "AOMEIBackupper",
+        "category":  "System",
+        "supportsLocation":  true
+    },
+    {
+        "id":  "AOMEI.PartitionAssistant",
+        "name":  "AOMEIPartitionAssistant",
+        "category":  "System",
+        "supportsLocation":  false,
+        "Location":  ""
+    },
+    {
+        "id":  "WinDirStat.WinDirStat",
+        "name":  "WinDirStat",
+        "category":  "System",
+        "supportsLocation":  false,
+        "Location":  "C:/Program Files/WinDirStat"
+    },
+    {
+        "id":  "Eraser.Eraser",
+        "name":  "Eraser",
+        "category":  "System",
+        "supportsLocation":  false,
+        "Location":  "C:/Program Files/Eraser"
+    },
+    {
+        "id":  "IDRIX.VeraCrypt",
+        "name":  "VeraCrypt",
+        "category":  "System",
+        "supportsLocation":  false,
+        "Location":  "C:/Program Files/VeraCrypt"
+    },
+    {
+        "id":  "Glarysoft.GlaryUtilities",
+        "name":  "GlaryUtilities",
+        "category":  "System",
+        "supportsLocation":  false,
+        "Location":  "C:/Program Files (x86)/Glary Utilities"
+    },
+    {
+        "id":  "Nlitesoft.NTLite",
+        "name":  "NTLite",
+        "category":  "System",
+        "supportsLocation":  null
+    },
+    {
+        "id":  "TheDocumentFoundation.LibreOffice",
+        "name":  "LibreOffice",
+        "category":  "",
+        "supportsLocation":  true
+    },
+    {
+        "id":  "Discord.discord",
+        "name":  "Discord",
+        "category":  "",
+        "supportsLocation":  null
+    },
+    {
+        "id":  "Valve.Steam",
+        "name":  "Steam",
+        "category":  "",
+        "supportsLocation":  null
+    },
+    {
+        "id":  "EpicGames.EpicGamesLauncher",
+        "name":  "EpicGames",
+        "category":  "",
+        "supportsLocation":  null
+    },
+    {
+        "id":  "Overwolf.CurseForge",
+        "name":  "Curseforge",
+        "category":  "",
+        "supportsLocation":  null
+    },
+    {
+        "id":  "Logitech.GHUB",
+        "name":  "LogitechGHub",
+        "category":  "",
+        "supportsLocation":  null
+    },
+    {
+        "id":  "XPDBZ4MPRKNN30",
+        "name":  "Opera GX",
+        "category":  "",
+        "supportsLocation":  null
+    },
+    {
+        "id":  "Google.Chrome",
+        "name":  "GoogleChrome",
+        "category":  "",
+        "supportsLocation":  null
+    },
+    {
+        "id":  "Ubisoft.Connect",
+        "name":  "UbisoftConnect",
+        "category":  "",
+        "supportsLocation":  null
+    }
+]

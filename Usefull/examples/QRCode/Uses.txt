@@ -1,0 +1,5 @@
+# Exemple simple
+.\New-QRCode.ps1 -Text "Bonjour Shaltyr Tools" -OutputPath ".\bonjour.png"
+
+# Avec une autre taille
+.\New-QRCode.ps1 -Text "https://shaltyr-tools.local" -OutputPath ".\site.png" -Size 500

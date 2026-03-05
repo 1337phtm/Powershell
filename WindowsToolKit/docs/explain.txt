@@ -1,0 +1,239 @@
+﻿Bien sûr 🙂
+Je vais tout reprendre calmement, dossier par dossier, avec des mots simples, le rôle, qui l’utilise, et des exemples concrets pour TON WindowsToolKit.
+
+L’idée : à la fin, tu dois pouvoir dire “ok, celui-là je le garde / celui-là je n’en ai pas besoin”.
+
+🗂️ Tous les dossiers expliqués clairement
+📁 .github/
+👉 À quoi ça sert
+
+Contient tout ce qui est lié à GitHub, surtout l’automatisation.
+
+Qui l’utilise
+
+GitHub
+
+Toi, indirectement
+
+Contenu typique
+.github/
+└── workflows/
+    └── tests.yml
+
+Exemple concret
+
+lancer des tests automatiquement à chaque git push
+
+vérifier que ton code ne casse rien
+
+👉 Optionnel au début, utile plus tard.
+
+📁 docs/
+👉 À quoi ça sert
+
+Documentation détaillée (au-delà du README).
+
+Qui l’utilise
+
+Utilisateurs avancés
+
+Contributeurs
+
+Contenu typique
+docs/
+├── installation.md
+├── usage.md
+├── troubleshooting.md
+
+
+👉 Si ton README suffit → tu peux t’en passer.
+
+📁 src/ (LE PLUS IMPORTANT)
+👉 À quoi ça sert
+
+Contient le code principal de WindowsToolKit.
+
+Qui l’utilise
+
+PowerShell (via Import-Module)
+
+Ton script Main.ps1
+
+Ce qu’on y met
+src/
+├── WindowsToolKit.psm1   ← module principal
+├── WindowsToolKit.psd1   ← manifest (version, auteur…)
+├── Public/               ← commandes utilisateur
+└── Private/              ← code interne
+
+👉 Indispensable
+
+📁 src/Public/
+👉 À quoi ça sert
+
+Fonctions accessibles à l’utilisateur.
+
+Exemple
+Get-WtkSystemInfo.ps1
+Start-Wtk.ps1
+
+
+👉 Ce sont les commandes que tu veux exposer.
+
+📁 src/Private/
+👉 À quoi ça sert
+
+Fonctions internes, invisibles pour l’utilisateur.
+
+Exemple
+Show-Menu.ps1
+Write-InternalLog.ps1
+
+
+👉 Ça évite le bazar et protège ton API.
+
+📁 lib/
+👉 À quoi ça sert
+
+Code de support ou dépendances, pas spécifiques à WTK.
+
+Qui l’utilise
+
+Le module (src)
+
+Pas l’utilisateur directement
+
+Exemples
+lib/
+├── Logger/
+├── ConsoleUI/
+└── ZipHelpers/
+
+
+👉 Optionnel
+➡️ À créer seulement si tu as du code réutilisable
+
+📁 tests/
+👉 À quoi ça sert
+
+Tests automatiques (Pester).
+
+Qui l’utilise
+
+Toi
+
+GitHub Actions (plus tard)
+
+Exemple
+tests/
+└── Get-WtkSystemInfo.Tests.ps1
+
+
+👉 Fortement recommandé, mais pas obligatoire.
+
+📁 examples/
+👉 À quoi ça sert
+
+Exemples d’utilisation du toolkit.
+
+Qui l’utilise
+
+Les utilisateurs
+
+Toi pour tester
+
+Exemple
+examples/
+└── basic-usage.ps1
+
+
+👉 Utile pour montrer “comment s’en servir”.
+
+📁 tools/
+👉 À quoi ça sert
+
+Scripts pour fabriquer et maintenir le projet.
+
+Qui l’utilise
+
+Toi (développeur)
+
+Exemples
+tools/
+├── build.ps1
+├── install-dev.ps1
+└── run-tests.ps1
+
+
+👉 Jamais utilisé par l’utilisateur final
+
+📁 (racine) – fichiers importants
+▶️ Main.ps1
+
+Script principal à exécuter :
+
+.\Main.ps1
+
+
+👉 Point d’entrée utilisateur.
+
+📄 README.md
+
+Présentation
+
+Installation
+
+Usage rapide
+
+👉 Obligatoire.
+
+📄 CONTRIBUTING.md
+
+Comment contribuer
+
+Règles de code
+
+👉 Optionnel.
+
+📄 CHANGELOG.md
+
+Historique des versions
+
+👉 Recommandé si tu fais des releases.
+
+📄 LICENSE
+
+Licence du projet
+
+👉 Obligatoire (tu l’as déjà 👍)
+
+🧠 Vue d’ensemble (simple)
+Utilisateur
+   ↓
+Main.ps1
+   ↓
+src/ (module WindowsToolKit)
+   ↓
+lib/ (support, optionnel)
+
+✅ Ce que je te recommande pour TON projet (aujourd’hui)
+Minimum sain :
+WindowsToolKit/
+├── Main.ps1
+├── src/
+│   ├── WindowsToolKit.psm1
+│   ├── Public/
+│   └── Private/
+├── README.md
+└── LICENSE
+
+
+Tout le reste peut venir plus tard.
+
+Si tu veux, prochain pas possible :
+
+je te fais un schéma visuel
+
+je te dis quoi créer maintenant vs plus tard
+
+je t’aide à réorganiser ton repo existant sans tout casser
