@@ -44,12 +44,11 @@ function Write-Status {
 }
 
 function Show-Counters {
-    Write-Host ""
     Show-SectionHeader "Execution Summary"
     Write-Host "  ✓ SUCCESS : $($Global:StatusCounters.SUCCESS)" -ForegroundColor Green
     Write-Host "  ✗ ERROR   : $($Global:StatusCounters.ERROR)" -ForegroundColor Red
     Write-Host "  - SKIP    : $($Global:StatusCounters.SKIP)" -ForegroundColor Yellow
-    Write-Host "  → INFO    : $($Global:StatusCounters.INFO)" -ForegroundColor Cyan
+    Write-Host "  → INFO    : $($Global:StatusCounters.INFO)`n" -ForegroundColor Cyan
     #if ($Global:LogFile) {
     #    Write-Host "  📝 Log    : $Global:LogFile" -ForegroundColor Gray
     #}
