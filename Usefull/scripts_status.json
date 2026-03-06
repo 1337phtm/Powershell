@@ -60,6 +60,10 @@
         "Status":  "✓"
     },
     {
+        "Name":  "Network-Scanner.ps1",
+        "Status":  "✓"
+    },
+    {
         "Name":  "New-QrCode.ps1",
         "Status":  "✓"
     },
@@ -122,10 +126,6 @@
     {
         "Name":  "snorlabel.ps1",
         "Status":  "→"
-    },
-    {
-        "Name":  "test.ps1",
-        "Status":  "?"
     },
     {
         "Name":  "test2.ps1",
