@@ -1204,21 +1204,4 @@ Write-Host "Appuyez sur Entrée pour quitter..." -ForegroundColor Gray
 Read-Host
 
 
-<#======================================================================
-<#A faire :
-<#======================================================================
 
-supprimer C:\Users\Phantom__m\AppData\Local\Microsoft\OneDrive  Internet Explorer et edge
-cherche dans local plus autres tous les fichiers inutiles
-
-
-luminosité : paramètre --> Système --> écran --> modifier la luminostié en fonctio ndu contenu (menu déroulant luminosité)
-
-
-Forcer l’ouverture de Paramètres sur l’onglet Système (SettingsPageVisibility = hide:home sous HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer).
-
-rajoute rbureau a distance
-
-install git, ssh, module winget, etc.
-
-#>
