@@ -56,6 +56,3 @@ rajoute rbureau a distance
 install git, ssh, module winget, etc.
 
 #>
-
-
-taches planifié one drive
