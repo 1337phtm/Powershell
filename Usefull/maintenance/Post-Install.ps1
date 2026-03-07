@@ -23,9 +23,9 @@ function Write-Status {
         "SUCCESS" { Write-Host " [$timestamp] ✓  $Message" -ForegroundColor Green }
         "ERROR" { Write-Host " [$timestamp] ✗ $Message" -ForegroundColor Red }
         "SKIP" { Write-Host " [$timestamp] - $Message" -ForegroundColor Yellow }
-        "INFO" { Write-Host " [$timestamp] → $Message" -ForegroundColor Cyan }
-        "TEST" { Write-Host " [$timestamp] ✎ [TEST] $Message" -ForegroundColor Magenta }
-        "USER" { Write-Host " [$timestamp] ✎ [USER] $Message" -ForegroundColor White }
+        "INFO" { Write-Host " [$timestamp] →  $Message" -ForegroundColor Cyan }
+        "TEST" { Write-Host " [$timestamp] T  $Message" -ForegroundColor Magenta }
+        "USER" { Write-Host " [$timestamp] U  $Message" -ForegroundColor White }
     }
 }
 
@@ -50,7 +50,7 @@ function Set-RegistryValueSafe {
     )
 
     if ($Path -like "HKLM:*" -and $User) {
-        Write-Status USER "Mode utilisateur, $Description ignorée (HKLM)"
+        Write-Status USER "$Description ignorée (HKLM)"
         return
     }
 
@@ -84,28 +84,6 @@ function Set-RegistryValueSafe {
 # Démarrage en admin :
 #======================================================================
 
-# Vérifie si le script est lancé en tant qu'administrateur et relance avec les paramètres
-#if (-not $User) {
-#    $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-#    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
-#        Write-Status INFO "Elevation requise. Relance en administrateur..."
-#        $allArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-#        if ($Test) { $allArgs += " -Test" }
-#        Start-Process powershell.exe -ArgumentList $allArgs -Verb RunAs
-#        exit
-#    }
-#}
-#else {
-#    Write-Status USER "Mode utilisateur → TERMINAL OUVERT (modifs HKLM ignorées)"
-#    $allArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-#    if ($Test) { $allArgs += " -Test" }
-#    # ✅ SANS -User → brise la boucle !
-#    Start-Process powershell.exe -ArgumentList $allArgs -WorkingDirectory $PSScriptRoot
-#    exit
-#}
-
-
-
 # ANTI-BOUCLE : Vérif fichier temporaire
 $restartMarker = "$env:TEMP\$($MyInvocation.MyCommand.Name).restart"
 if (Test-Path $restartMarker) {
@@ -127,7 +105,7 @@ else {
         }
     }
     else {
-        Write-Status INFO "[USER]Mode utilisateur → nouveau terminal..."
+        Write-Status INFO "[USER] Mode utilisateur → nouveau terminal..."
         $allArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" -User"
         if ($Test) { $allArgs += " -Test" }
         New-Item $restartMarker -ItemType File | Out-Null
@@ -495,13 +473,6 @@ Set-RegistryValueSafe `
     -Name "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" `
     -Value 1 `
     -Description "Icône Ce PC sur bureau"
-
-# Toujours afficher les icônes réseau et volume |# 0 : Affiché | 1 : Masqué
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" `
-    -Name HideSCAVolume `
-    -Value 0 `
-    -Description "Afficher icônes réseau/volume"
 
 # Afficher l'option "Ouvrir l'invite de commande ici" dans le menu contextuel
 #Set-RegistryValueSafe `
@@ -1034,7 +1005,7 @@ if (-not $User) {
     }
 }
 else {
-    Write-Status USER "AppX ignoré car non-admin"
+    Write-Status USER "AppX ignoré"
 }
 
 #======================================================================
@@ -1093,7 +1064,7 @@ if (-not $User) {
     }
 }
 else {
-    Write-Status USER "Winget ignoré car non-admin"
+    Write-Status USER "Winget ignoré"
 }
 
 #======================================================================
@@ -1103,24 +1074,29 @@ else {
 Show-SectionHeader "🔴 SERVICES"
 
 # Télémétrie
-Stop-Service -Name "DiagTrack" -Force
-Set-Service -Name "DiagTrack" -StartupType Disabled
-sc.exe failure "DiagTrack" reset= 0 actions= none/0/none/0/none/0 | Out-Null
+if (-not $User) {
+    Stop-Service -Name "DiagTrack" -Force
+    Set-Service -Name "DiagTrack" -StartupType Disabled
+    sc.exe failure "DiagTrack" reset= 0 actions= none/0/none/0/none/0 | Out-Null
 
-Stop-Service -Name "diagsvc" -Force
-Set-Service -Name "diagsvc" -StartupType Disabled
-sc.exe failure "diagsvc" reset= 0 actions= none/0/none/0/none/0 | Out-Null
+    Stop-Service -Name "diagsvc" -Force
+    Set-Service -Name "diagsvc" -StartupType Disabled
+    sc.exe failure "diagsvc" reset= 0 actions= none/0/none/0/none/0 | Out-Null
 
 
-Stop-Service -Name "dmwappushservice" -Force
-Set-Service -Name "dmwappushservice" -StartupType Disabled
-sc.exe failure "dmwappushservice" reset= 0 actions= none/0/none/0/none/0 | Out-Null
+    Stop-Service -Name "dmwappushservice" -Force
+    Set-Service -Name "dmwappushservice" -StartupType Disabled
+    sc.exe failure "dmwappushservice" reset= 0 actions= none/0/none/0/none/0 | Out-Null
 
-Stop-Service -Name "WerSvc" -Force
-Set-Service -Name "WerSvc" -StartupType Disabled
-sc.exe failure "WerSvc" reset= 0 actions= none/0/none/0/none/0 | Out-Null
+    Stop-Service -Name "WerSvc" -Force
+    Set-Service -Name "WerSvc" -StartupType Disabled
+    sc.exe failure "WerSvc" reset= 0 actions= none/0/none/0/none/0 | Out-Null
 
-Write-Status SUCCESS "Télémétrie désactivée"
+    Write-Status SUCCESS "Services de télémétrie désactivée"
+}
+else {
+    Write-Status USER "Services de télémétrie ignorés"
+}
 
 #======================================================================
 # Tâches planifiées inutiles :
@@ -1139,14 +1115,19 @@ $ScheduledTasksToDisable = @(
     "Microsoft\Windows\Windows Error Reporting\QueueReporting"
 )
 
-foreach ($task in $ScheduledTasksToDisable) {
-    try {
-        Disable-ScheduledTask -TaskName $task -ErrorAction Stop | Out-Null
-        Write-Status SUCCESS "Tâche désactivée : $task"
+if (-not $User) {
+    foreach ($task in $ScheduledTasksToDisable) {
+        try {
+            Disable-ScheduledTask -TaskName $task -ErrorAction Stop | Out-Null
+            Write-Status SUCCESS "Tâche désactivée : $task"
+        }
+        catch {
+            Write-Status SKIP "Impossible de désactiver : $task"
+        }
     }
-    catch {
-        Write-Status SKIP "Impossible de désactiver : $task"
-    }
+}
+else {
+    Write-Status USER "Tâches planifiées ignorées"
 }
 
 
@@ -1166,7 +1147,7 @@ else {
 
 Remove-Item "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
 Remove-Item "C:\Windows\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item "C:\Windows\SoftwareDistribution\Download\*" -Recurse -Force -ErrorAction SilentlyContinue #Win update cache
+Remove-Item "C:\Windows\SoftwareDistribution\Download\*" -Recurse -Force -ErrorAction SilentlyContinue #Win update cache #admin
 Write-Status SUCCESS "Fichiers temporaires supprimés"
 
 if (-not $Test) {
@@ -1196,9 +1177,9 @@ if ($StatusCounters.USER -gt 0) {
 }
 Write-Host ""
 Write-Host "  ✓ SUCCESS : $($StatusCounters.SUCCESS)" -ForegroundColor Green
-Write-Host "  ✗ ERROR   : $($StatusCounters.ERROR)" -ForegroundColor Red
 Write-Host "  - SKIP    : $($StatusCounters.SKIP)" -ForegroundColor Yellow
 Write-Host "  → INFO    : $($StatusCounters.INFO)" -ForegroundColor Cyan
+Write-Host "  ✗ ERROR   : $($StatusCounters.ERROR)" -ForegroundColor Red
 
 
 if (-not $Test) {

@@ -4,10 +4,10 @@
 # In Normal Mode (admins rights needed)
 .\Post-Install.ps1
 
-# In User Mode
+# In User Mode (without admins rights)
 .\Post-Install.ps1 -User
 
-# In test Mode
+# In test Mode (no explorer services restart and others params)
 .\Post-Install.ps1 -Test
 
 # In User Test Mode
