@@ -22,7 +22,7 @@ function Write-Status {
     switch ($Type) {
         "SUCCESS" { Write-Host " [$timestamp] ✓  $Message" -ForegroundColor Green }
         "ERROR" { Write-Host " [$timestamp] ✗ $Message" -ForegroundColor Red }
-        "SKIP" { Write-Host " [$timestamp] - $Message" -ForegroundColor Yellow }
+        "SKIP" { Write-Host " [$timestamp] -  $Message" -ForegroundColor Yellow }
         "INFO" { Write-Host " [$timestamp] →  $Message" -ForegroundColor Cyan }
         "TEST" { Write-Host " [$timestamp] T  $Message" -ForegroundColor Magenta }
         "USER" { Write-Host " [$timestamp] U  $Message" -ForegroundColor White }
@@ -78,7 +78,6 @@ function Set-RegistryValueSafe {
         }
     }
 }
-
 
 #======================================================================
 # Démarrage en admin :
@@ -137,19 +136,19 @@ elseif ($Test) {
 }
 elseif ($User) {
     Write-Host ""
-    Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Cyan
-    Write-Host "║             POST - INSTALL           ║" -ForegroundColor Cyan
-    Write-Host "║             ✎ USER - MODE            ║" -ForegroundColor Cyan
-    Write-Host "║          WRITTEN BY 1337phtm         ║" -ForegroundColor Cyan
-    Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Cyan
+    Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Blue
+    Write-Host "║             POST - INSTALL           ║" -ForegroundColor Blue
+    Write-Host "║             ✎ USER - MODE            ║" -ForegroundColor Blue
+    Write-Host "║          WRITTEN BY 1337phtm         ║" -ForegroundColor Blue
+    Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Blue
     Write-Host ""
 }
 else {
     Write-Host ""
-    Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Green
-    Write-Host "║             POST - INSTALL           ║" -ForegroundColor Green
-    Write-Host "║          WRITTEN BY 1337phtm         ║" -ForegroundColor Green
-    Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Green
+    Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Blue
+    Write-Host "║             POST - INSTALL           ║" -ForegroundColor Blue
+    Write-Host "║          WRITTEN BY 1337phtm         ║" -ForegroundColor Blue
+    Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Blue
     Write-Host ""
 }
 
@@ -223,50 +222,79 @@ else {
 #======================================================================
 Show-SectionHeader "⚡ PARAMÈTRES D'ALIMENTATION"
 
-if (-not $user) {
+if (-not $User) {
     if (-not $Test) {
+        # Activer l’hibernation
         try {
-            #Mise en veille prolongé :
             powercfg /hibernate on
+            Write-Status SUCCESS "Hibernation activée"
+        }
+        catch {
+            Write-Status ERROR "Impossible d'activer l'hibernation"
+        }
 
-            #Action qui suit la fermeture du capot :
-            powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 1 #Sur secteur AC | 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 2 #Sur batterie DC | 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            Write-Status SUCCESS "Paramètres de fermeture du capot configurés"
+        $AC = @(
+            @{Cmd = "SUB_BUTTONS LIDACTION 1"; Desc = "Fermeture du capot (AC) → Veille"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = "SUB_BUTTONS PBUTTONACTION 1"; Desc = "Bouton Marche/Arrêt (AC) → Veille"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = "SUB_BUTTONS SBUTTONACTION 1"; Desc = "Bouton veille (AC) → Veille"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = "SUB_NONE CONSOLELOCK 1"; Desc = "Verrouillage auto après veille (AC)"; } # 0 = Désactivé | 1 = Activé
+        )
 
-            #Bouton Marche/Arrêt :
-            powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS PBUTTONACTION 1 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS PBUTTONACTION 2 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            Write-Status SUCCESS "Paramètres du bouton Marche/Arrêt configurés"
+        $DC = @(
+            @{Cmd = "SUB_BUTTONS LIDACTION 2"; Desc = "Fermeture du capot (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = "SUB_BUTTONS PBUTTONACTION 2"; Desc = "Bouton Marche/Arrêt (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = "SUB_BUTTONS SBUTTONACTION 2"; Desc = "Bouton veille (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = "SUB_NONE CONSOLELOCK 1"; Desc = "Verrouillage auto après veille (DC)"; } # 0 = Désactivé | 1 = Activé
+        )
 
-            #Bouton veille :
-            powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS SBUTTONACTION 1 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS SBUTTONACTION 2 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            Write-Status SUCCESS "Paramètres du bouton veille configurés"
+        foreach ($item in $AC) {
+            try {
+                powercfg /setacvalueindex SCHEME_CURRENT $($item.Cmd)
+                Write-Status SUCCESS $item.Desc
+            }
+            catch {
+                Write-Status ERROR "Impossible : $($item.Desc)"
+            }
+        }
 
-            # Activé le verrouillage auto après veille
-            powercfg /setacvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 1 # 0 = Désactivé | 1 = Activé
-            powercfg /setdcvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 1 # 0 = Désactivé | 1 = Activé
-            Write-Status SUCCESS "Verrouillage automatique après veille activé"
+        foreach ($item in $DC) {
+            try {
+                powercfg /setdcvalueindex SCHEME_CURRENT $($item.Cmd)
+                Write-Status SUCCESS $item.Desc
+            }
+            catch {
+                Write-Status ERROR "Impossible : $($item.Desc)"
+            }
+        }
 
-            # Délai de mise en veille
-            powercfg /change standby-timeout-ac 0 # 0 : never
-            powercfg /change standby-timeout-dc 0 # 0 : never
+        # Mise en veille
+        try {
+            powercfg /change standby-timeout-ac 0
+            powercfg /change standby-timeout-dc 0
             Write-Status SUCCESS "Paramètres de mise en veille configurés"
+        }
+        catch {
+            Write-Status ERROR "Impossible de configurer la mise en veille"
+        }
 
-            # Délai d'extinction de l'écran
-            powercfg /change monitor-timeout-ac 0 # 0 : never
-            powercfg /change monitor-timeout-dc 0 # 0 : never
+        # Extinction écran
+        try {
+            powercfg /change monitor-timeout-ac 0
+            powercfg /change monitor-timeout-dc 0
             Write-Status SUCCESS "Paramètres d'extinction de l'écran configurés"
+        }
+        catch {
+            Write-Status ERROR "Impossible de configurer l'extinction de l'écran"
+        }
 
-            #Validation des paramètres :
+        # Activation du plan
+        try {
             powercfg /setactive SCHEME_CURRENT
             Write-Status SUCCESS "Paramètres d'alimentation appliqués"
         }
         catch {
-            Write-Status ERROR "Erreur lors de la modification des paramètres d'alimentation : $($_.Exception.Message)"
+            Write-Status ERROR "Impossible d'appliquer le plan d'alimentation"
         }
-
     }
     else {
         Write-Status TEST "Modification des paramètres d'alimentation ignorée"
@@ -276,670 +304,179 @@ else {
     Write-Status USER "Modification des paramètres d'alimentation ignorée"
 }
 
+
 #======================================================================
 # Thèmes :
 #======================================================================
 Show-SectionHeader "🎨 THÈMES & APPARENCE"
 
-# Mode sombre pour les apps | # 0 : Sombre (non) | 1 : Clair (oui)
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" `
-    -Name AppsUseLightTheme `
-    -Value 0 `
-    -Description "Thème Apps"
-
-# Mode Clair pour Windows | # 0 : Sombre (non) | 1 : Clair (oui)
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" `
-    -Name SystemUsesLightTheme `
-    -Value 0 `
-    -Description "Thème Windows"
-
-# Transparence | # 0 : Désactivé | 1 : Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" `
-    -Name EnableTransparency `
-    -Value 1 `
-    -Description "Transparence"
-
-# Son de démarrage | # 0 : Activé | 1 : Désactivé
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
-    -Name DisableStartupSound `
-    -Value 0 `
-    -Description "Son de démarrage"
-
-#Désactivé animations Windows (profil agressif)
-#Set-RegistryValueSafe `
-#    -Path "HKCU:\Control Panel\Desktop" `
-#    -Name UserPreferencesMask `
-#    -Value ([byte[]](0x90, 0x12, 0x03, 0x80, 0x10, 0x00, 0x00, 0x00)) `
-#    -Experimental
+$Changes = @(
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"; Name = "AppsUseLightTheme"; Value = 0; Description = "Thème Apps (mode sombre)"; } # Mode sombre pour les apps | # 0 : Sombre (non) | 1 : Clair (oui)
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"; Name = "SystemUsesLightTheme"; Value = 0; Description = "Thème Windows (mode sombre)"; } # Mode Clair pour Windows | # 0 : Sombre (non) | 1 : Clair (oui)
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"; Name = "EnableTransparency"; Value = 1; Description = "Transparence Windows"; } # Transparence | # 0 : Désactivé | 1 : Activé
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "DisableStartupSound"; Value = 0; Description = "Son de démarrage"; } # Son de démarrage | # 0 : Activé | 1 : Désactivé
+    #@{Path = "HKCU:\Control Panel\Desktop"; Name = "UserPreferencesMask"; Value = ([byte[]](0x90, 0x12, 0x03, 0x80, 0x10, 0x00, 0x00, 0x00)); Description = "Son de démarrage"; Experimental=$True;} # Désactivé animations Windows (profil agressif)
+)
+foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
 #======================================================================
 # BARRE DES TÂCHES :
 #======================================================================
 Show-SectionHeader "📋 BARRE DES TÂCHES"
 
-# Alignement : | # 0 : Gauche | 1 : centre
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name TaskbarAl `
-    -Value 1 `
-    -Description "Alignement barre des tâches"
-
-# Widgets (Win11) # 0 : Masqué | 1 : Affiché | 2 : Affiché + fct étendue
-#Set-RegistryValueSafe `
-#    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-#    -Name TaskbarDa `
-#    -Value 0 `
-#    -Description "Widgets de la barre des tâches"
-
-# Recherche | # 0 : Masqué | 1 : Icône seule | 2 : Boîte de saisie
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" `
-    -Name SearchboxTaskbarMode `
-    -Value 0 `
-    -Description "Icône de recherche"
-
-# Task View | # 0 : Masqué | 1 : Affiché
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name ShowTaskViewButton `
-    -Value 0 `
-    -Description "Icône Task View"
-
-# Afficher secondes dans l'horloge (Win11 23H2+) | # 0 = Non | 1 = Oui
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name ShowSecondsInSystemClock `
-    -Value 1 `
-    -Description "Secondes horloge système"
-
-# Badges d'applis | # 0 : Désactivé | 1 : Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name TaskbarBadges `
-    -Value 0 `
-    -Description "Badges d'applications"
-
-# Activer "Terminer la tâche" dans le menu contextuel de la barre des tâches (Win11 23H2+) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings" `
-    -Name "TaskbarEndTask" `
-    -Value 1 `
-    -Description "Activer 'Terminer la tâche' dans la barre des tâches"
-
+$Changes = @(
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "TaskbarAl"; Value = 1; Description = "Alignement barre des tâches"; } # 0 = Gauche | 1 = Centre
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search"; Name = "SearchboxTaskbarMode"; Value = 0; Description = "Icône de recherche"; } # 0 = Masqué | 1 = Icône | 2 = Boîte
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "ShowTaskViewButton"; Value = 0; Description = "Icône Task View"; } # 0 = Masqué | 1 = Affiché
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "ShowSecondsInSystemClock"; Value = 1; Description = "Secondes horloge système"; } # 0 = Non | 1 = Oui
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "TaskbarBadges"; Value = 0; Description = "Badges d'applications"; } # 0 = Désactivé | 1 = Activé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\TaskbarDeveloperSettings"; Name = "TaskbarEndTask"; Value = 1; Description = "Activer 'Terminer la tâche' dans la barre des tâches"; } # 0 = Désactivé | 1 = Activé
+    # @{Path="HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name="TaskbarDa"; Value=0; Description="Widgets de la barre des tâches";} # 0 = Masqué | 1 = Affiché | 2 = Étendu
+)
+foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
 #======================================================================
 # Explorateur de fichier :
 #======================================================================
 Show-SectionHeader "📁 EXPLORATEUR DE FICHIERS"
 
-# Affichage des extensions de fichiers : | # 0 = Afficher | 1 = Masquer
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name HideFileExt `
-    -Value 0 `
-    -Description "Extensions de fichiers"
-
-# Afficher fichiers cachés : | # 1 = Afficher | 2 = Masquer
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Hidden `
-    -Value 1 `
-    -Description "Fichiers cachés"
-
-# Afficher les fichiers système protégés (optionnel) <=> attrib -s -h | # 0 = Masquer | 1 = Afficher
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name ShowSuperHidden `
-    -Value 0 `
-    -Description "Fichiers système protégés"
-
-# Ouvrir l'explorateur sur « Ce PC » au lieu de Accès rapide | # 1 = Ce PC | 2 = Accès rapide
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name LaunchTo `
-    -Value 1 `
-    -Description "Explorateur sur Ce PC"
-
-# Accès rapide (fichiers récents) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer" `
-    -Name ShowRecent `
-    -Value 0 `
-    -Description "Accès rapide - Fichiers récents"
-
-#  Accès rapide (dossiers fréquents) | 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer" `
-    -Name ShowFrequent `
-    -Value 0 `
-    -Description "Accès rapide - Dossiers fréquents"
-
-# Mode compact (Win11) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name UseCompactMode `
-    -Value 1 `
-    -Description "Mode compact Explorateur"
-
-# Case à cocher des éléments (Win11) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name AutoCheckSelect `
-    -Value 1 `
-    -Description "Cases à cocher dans Explorateur"
-
-# Activé l'historique du presse-papiers | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Clipboard" `
-    -Name EnableClipboardHistory `
-    -Value 1 `
-    -Description "Historique presse-papiers"
-
-# Activé les info-bulles (icones quand souris longtemps sur fichier) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name ShowInfoTip `
-    -Value 1 `
-    -Description "Info-bulles sur fichiers"
-
-# Ouvrir les dossiers dans le même processus | # 0 = Même processus | 1 = Processus séparé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name SeparateProcess `
-    -Value 1 `
-    -Description "Processus séparé"
-
-# Miniatures (préaffichage sur l'icone genre pour les images) | # 0 = Miniatures | 1 = Icônes seulement
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name IconsOnly `
-    -Value 0 `
-    -Description "Miniatures au lieu d'icônes"
-
-# Cache des miniatures | # 0 = Activé | 1 = Désactivé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name DisableThumbnailCache `
-    -Value 1 `
-    -Description "Cache miniatures"
-
-# Afficher "Ce PC" sur le bureau | # 0 : Affiché | 1 : Masqué
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel" `
-    -Name "{20D04FE0-3AEA-1069-A2D8-08002B30309D}" `
-    -Value 1 `
-    -Description "Icône Ce PC sur bureau"
-
-# Afficher l'option "Ouvrir l'invite de commande ici" dans le menu contextuel
-#Set-RegistryValueSafe `
-#    -Path "HKCU:\Software\Classes\Directory\Background\shell\cmd" `
-#    -Name "Extended" `
-#    -Value "" `
-#    -Description "Ajout cmd ici dans le menu contextuel"
+$Changes = @(
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "HideFileExt"; Value = 0; Description = "Extensions de fichiers"; } # 0 = Afficher | 1 = Masquer
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Hidden"; Value = 1; Description = "Fichiers cachés"; } # 1 = Afficher | 2 = Masquer
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "ShowSuperHidden"; Value = 0; Description = "Fichiers système protégés"; } # 0 = Masquer | 1 = Afficher
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "LaunchTo"; Value = 1; Description = "Explorateur sur Ce PC"; } # 1 = Ce PC | 2 = Accès rapide
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer"; Name = "ShowRecent"; Value = 0; Description = "Accès rapide - Fichiers récents"; } # 0 = Désactivé | 1 = Activé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer"; Name = "ShowFrequent"; Value = 0; Description = "Accès rapide - Dossiers fréquents"; } # 0 = Désactivé | 1 = Activé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "UseCompactMode"; Value = 1; Description = "Mode compact Explorateur"; } # 0 = Désactivé | 1 = Activé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "AutoCheckSelect"; Value = 1; Description = "Cases à cocher dans Explorateur"; } # 0 = Désactivé | 1 = Activé
+    @{Path = "HKCU:\Software\Microsoft\Clipboard"; Name = "EnableClipboardHistory"; Value = 1; Description = "Historique presse-papiers"; } # 0 = Désactivé | 1 = Activé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "ShowInfoTip"; Value = 1; Description = "Info-bulles sur fichiers"; } # 0 = Désactivé | 1 = Activé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "SeparateProcess"; Value = 1; Description = "Processus séparé"; } # 0 = Même processus | 1 = Processus séparé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "IconsOnly"; Value = 0; Description = "Miniatures au lieu d'icônes"; } # 0 = Miniatures | 1 = Icônes seulement
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "DisableThumbnailCache"; Value = 1; Description = "Cache miniatures"; } # 0 = Activé | 1 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\NewStartPanel"; Name = "{20D04FE0-3AEA-1069-A2D8-08002B30309D}"; Value = 1; Description = "Icône Ce PC sur bureau"; } # 0 = Affiché | 1 = Masqué
+    # @{Path="HKCU:\Software\Classes\Directory\Background\shell\cmd"; Name="Extended"; Value=""; Description="Ajout cmd ici dans le menu contextuel";} # Optionnel
+)
+foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
 #======================================================================
 # Menu Démarrer :
 #======================================================================
 Show-SectionHeader "🏠 MENU DÉMARRER"
 
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowDocuments `
-    -Value 1 `
-    -Description "Documents dans le menu Démarrer" `
-    -Experimental
+$Changes = @(
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowDocuments"; Value = 1; Description = "Documents dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowDownloads"; Value = 1; Description = "Downloads dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowSettings"; Value = 1; Description = "Paramètres dans Start"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowFileExplorer"; Value = 1; Description = "Bouton Explorateur dans Start"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowPictures"; Value = 1; Description = "Pictures dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowMusic"; Value = 1; Description = "Music dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowVideos"; Value = 1; Description = "Videos dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowHomegroup"; Value = 1; Description = "Téléchargements dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowControlPanel"; Value = 1; Description = "Panneau de configuration dans Start"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowNetwork"; Value = 1; Description = "Network dans le menu Démarrer"; Experimental = $true; } # Expérimental
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_ShowUser"; Value = 1; Description = "Utilisateur dans le menu Démarrer"; Experimental = $true; } # Expérimental
 
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowDownloads `
-    -Value 1 `
-    -Description "Downloads dans le menu Démarrer" `
-    -Experimental
-
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowSettings `
-    -Value 1 `
-    -Description "Paramètres dans Start" `
-    -Experimental
-
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowFileExplorer `
-    -Value 1 `
-    -Description "Bouton Explorateur dans Start" `
-    -Experimental
-
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowPictures `
-    -Value 1 `
-    -Description "Pictures dans le menu Démarrer" `
-    -Experimental
-
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowMusic `
-    -Value 1 `
-    -Description "Music dans le menu Démarrer" `
-    -Experimental
-
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowVideos `
-    -Value 1 `
-    -Description "Videos dans le menu Démarrer" `
-    -Experimental
-
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowHomegroup `
-    -Value 1 `
-    -Description "Téléchargements dans le menu Démarrer" `
-    -Experimental
-
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowControlPanel `
-    -Value 1 `
-    -Description "Téléchargements dans le menu Démarrer" `
-    -Experimental
-
-
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowNetwork `
-    -Value 1 `
-    -Description "Network dans le menu Démarrer" `
-    -Experimental
-
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_ShowUser `
-    -Value 1 `
-    -Description "Téléchargements dans le menu Démarrer" `
-    -Experimental
-
-# Désactivé Bing dans la recherche : | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" `
-    -Name BingSearchEnabled `
-    -Value 0 `
-    -Description "Bing dans la recherche Windows"
-
-# Désactivé les recommandations dans Start : | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_Recommendations `
-    -Value 0 `
-    -Description "Recommandations d'applications dans le menu Démarrer"
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search"; Name = "BingSearchEnabled"; Value = 0; Description = "Bing dans la recherche Windows"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_Recommendations"; Value = 0; Description = "Recommandations d'applications dans le menu Démarrer"; } # 0 = Désactivé
+)
+foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
 #======================================================================
 # Confidentialité :
 #======================================================================
 Show-SectionHeader "🔒 CONFIDENTIALITÉ & TÉLÉMÉTRIE"
 
-# Désactivé Cortana
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search" `
-    -Name AllowCortana `
-    -Value 0 `
-    -Description "Désactiver Cortana"
-
-# Désactivé cortana : | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search" `
-    -Name CortanaConsent `
-    -Value 0 `
-    -Description "Consentement Cortana"
-
-# Désactivé les suggestions dans le menu démarrer : | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
-    -Name SystemPaneSuggestionsEnabled `
-    -Value 0 `
-    -Description "Suggestions menu Démarrer"
-
-# Pubs dans l'explorateur Windows | # 0 = Pas de pubs | 1 = Pubs activées
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name "ShowSyncProviderNotifications" `
-    -Value 0 `
-    -Description "Notifications pubs Explorateur"
-
-# Désactivé le suivi publicitaire | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo" `
-    -Name Enabled `
-    -Value 0 `
-    -Description "ID publicitaire"
-
-# Désactivé les expériences partagées | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\CDP" `
-    -Name RomeSdkChannelUserAuthzPolicy `
-    -Value 0 `
-    -Description "Expériences partagées"
-
-# Désactivé l’historique d’activité | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy" `
-    -Name TailoredExperiencesWithDiagnosticDataEnabled `
-    -Value 0 `
-    -Description "Historique d'activité personnalisé"
-
-# Désactivé l’historique d’activité Windows | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy" `
-    -Name "EnableActivityFeed" `
-    -Value 0 `
-    -Description "Historique d'activité Windows"
-
-# Désactivé la télémétrie (partiel) | # 0 = Désactivé | 1-4 = Niveaux diag
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection" `
-    -Name AllowTelemetry `
-    -Value 0 `
-    -Description "Télémétrie (niveau partiel)"
-
-# Désactivé OneDrive (user) | # 0 = Activé | 1 = Désactivé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\OneDrive" `
-    -Name DisablePersonalSync `
-    -Value 1 `
-    -Description "OneDrive pour le compte utilisateur"
-
-# Désactivation OneDrive via Policies
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive" `
-    -Name DisableFileSyncNGSC `
-    -Value 1 `
-    -Description "Synchronisation OneDrive par stratégies"
-
-# Masquer les suggestions Windows | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
-    -Name SubscribedContent-338388Enabled `
-    -Value 0 `
-    -Description "Suggestions Windows"
-
-# Suggestions de contenu (lockscreen, start, etc.) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
-    -Name "SubscribedContent-338389Enabled" `
-    -Value 0 `
-    -Description "Suggestions de contenu"
-
-# Désactivé les suggestions de contenu (lockscreen, etc.) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
-    -Name SubscribedContent-353694Enabled `
-    -Value 0 `
-    -Description "Suggestions de contenu"
-
-# Désactivé les suggestions de contenu (lockscreen, etc.) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
-    -Name SubscribedContent-353696Enabled `
-    -Value 0 `
-    -Description "Suggestions de contenu"
-
-# Désactivé l'historique de recherche locale : | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings" `
-    -Name IsDeviceSearchHistoryEnabled `
-    -Value 0 `
-    -Description "Historique de recherche locale"
-
-# Désactiver l’historique d’activité (cloud) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" `
-    -Name PublishUserActivities `
-    -Value 0 `
-    -Description "Historique d'activité envoyé au cloud"
-
-# Désactivé l’historique d’activité (cloud) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System (Publish)" `
-    -Name UploadUserActivities `
-    -Value 0 `
-    -Description "Upload de l'historique d'activité vers le cloud"
-
-# Désactivé "Let Windows track apps launched" | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" `
-    -Name Start_TrackProgs `
-    -Value 0 `
-    -Description "Suivi des applications lancées"
-
-# Désactivé les suggestions d’apps dans Start | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" `
-    -Name SilentInstalledAppsEnabled `
-    -Value 0 `
-    -Description "Suggestions d'applications silencieuses dans le menu Démarrer"
-
-# 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowWiFiHotSpotReporting" `
-    -Name Value `
-    -Value 0 `
-    -Description "Partage des données Wi-Fi (Wi-Fi Sense - reporting)"
-
-# Collecte des données d'utilisation des apps | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy" `
-    -Name "UserActivityTracking" `
-    -Value 0 `
-    -Description "Collecte des données d'utilisation des applications"
-
-# Accès aux données de diagnostic user | # 0 = Bloqué | 1 = Autorisé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy" `
-    -Name "LetAppsAccessDiagnosticInfo" `
-    -Value 0 `
-    -Description "Bloquer l'accès des applications aux données de diagnostic utilisateur"
-
-# Wifi sense | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowAutoConnectToWiFiSenseHotspots" `
-    -Name Value `
-    -Value 0 `
-    -Description "Connexion automatique aux points d'accès Wi-Fi Sense"
-
-# Désactivé NCSI (sonde réseau vers Microsoft) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKLM:\SYSTEM\CurrentControlSet\Services\NlaSvc\Parameters\Internet" `
-    -Name EnableActiveProbing `
-    -Value 0 `
-    -Description "Sonde active NCSI (réseau)"
-
-# Géolocalisation système | 0 : Activé | 1 : Désactivé
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors" `
-    -Name DisableLocation `
-    -Value 1 `
-    -Description "Géolocalisation système"
-
-# Activé synchronisation presse-papiers (optionnel) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\Clipboard" `
-    -Name CloudClipboardEnabled `
-    -Value 0 `
-    -Description "Synchronisation cloud presse-papiers"
+$Changes = @(
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\Windows Search"; Name = "AllowCortana"; Value = 0; Description = "Désactiver Cortana"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Search"; Name = "CortanaConsent"; Value = 0; Description = "Consentement Cortana"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"; Name = "SystemPaneSuggestionsEnabled"; Value = 0; Description = "Suggestions menu Démarrer"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "ShowSyncProviderNotifications"; Value = 0; Description = "Notifications pubs Explorateur"; } # 0 = Pas de pubs
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\AdvertisingInfo"; Name = "Enabled"; Value = 0; Description = "ID publicitaire"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\CDP"; Name = "RomeSdkChannelUserAuthzPolicy"; Value = 0; Description = "Expériences partagées"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy"; Name = "TailoredExperiencesWithDiagnosticDataEnabled"; Value = 0; Description = "Historique d'activité personnalisé"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy"; Name = "EnableActivityFeed"; Value = 0; Description = "Historique d'activité Windows"; } # 0 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"; Name = "AllowTelemetry"; Value = 0; Description = "Télémétrie (niveau partiel)"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\OneDrive"; Name = "DisablePersonalSync"; Value = 1; Description = "OneDrive pour le compte utilisateur"; } # 1 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\OneDrive"; Name = "DisableFileSyncNGSC"; Value = 1; Description = "Synchronisation OneDrive par stratégies"; } # 1 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"; Name = "SubscribedContent-338388Enabled"; Value = 0; Description = "Suggestions Windows"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"; Name = "SubscribedContent-338389Enabled"; Value = 0; Description = "Suggestions de contenu"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"; Name = "SubscribedContent-353694Enabled"; Value = 0; Description = "Suggestions de contenu"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"; Name = "SubscribedContent-353696Enabled"; Value = 0; Description = "Suggestions de contenu"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\SearchSettings"; Name = "IsDeviceSearchHistoryEnabled"; Value = 0; Description = "Historique de recherche locale"; } # 0 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System"; Name = "PublishUserActivities"; Value = 0; Description = "Historique d'activité envoyé au cloud"; } # 0 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System (Publish)"; Name = "UploadUserActivities"; Value = 0; Description = "Upload de l'historique d'activité vers le cloud"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced"; Name = "Start_TrackProgs"; Value = 0; Description = "Suivi des applications lancées"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager"; Name = "SilentInstalledAppsEnabled"; Value = 0; Description = "Suggestions d'applications silencieuses"; } # 0 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowWiFiHotSpotReporting"; Name = "Value"; Value = 0; Description = "Partage des données Wi-Fi (Wi-Fi Sense - reporting)"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy"; Name = "UserActivityTracking"; Value = 0; Description = "Collecte des données d'utilisation des applications"; } # 0 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Windows\CurrentVersion\Privacy"; Name = "LetAppsAccessDiagnosticInfo"; Value = 0; Description = "Bloquer l'accès des apps aux données de diagnostic"; } # 0 = Bloqué
+    @{Path = "HKLM:\SOFTWARE\Microsoft\PolicyManager\default\WiFi\AllowAutoConnectToWiFiSenseHotspots"; Name = "Value"; Value = 0; Description = "Connexion auto aux hotspots Wi-Fi Sense"; } # 0 = Désactivé
+    @{Path = "HKLM:\SYSTEM\CurrentControlSet\Services\NlaSvc\Parameters\Internet"; Name = "EnableActiveProbing"; Value = 0; Description = "Sonde active NCSI (réseau)"; } # 0 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\LocationAndSensors"; Name = "DisableLocation"; Value = 1; Description = "Géolocalisation système"; } # 1 = Désactivé
+    @{Path = "HKCU:\Software\Microsoft\Clipboard"; Name = "CloudClipboardEnabled"; Value = 0; Description = "Synchronisation cloud presse-papiers"; } # 0 = Désactivé
+)
+foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
 #======================================================================
 # Sécurité :
 #======================================================================
 Show-SectionHeader "🛡️ SÉCURITÉ WINDOWS"
 
-# Masquer le nom d’utilisateur à l’écran de login | # 0 = Afficher | 1 = Masquer
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
-    -Name DontDisplayLastUserName `
-    -Value 1 `
-    -Description "Nom du dernier utilisateur à l'écran de connexion"
-
-# Désactivé exécution automatique (USB/CD) | # 0x91 = Par défaut | 255 = Désactivé pour tous
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" `
-    -Name NoDriveTypeAutoRun `
-    -Value 255 `
-    -Description "Exécution automatique (USB, CD, périphériques amovibles)" `
-    -Experimental
-
-# 0 = Désactivé | 1 = Activé | 2 = Audit
-Set-RegistryValueSafe `
-    -Path "HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy" `
-    -Name "VerifiedAndReputablePolicyState" `
-    -Value 0 `
-    -Description "Smart App Control"
-
-# UAC au max (sécuritaire) | # 0 = Désactivé | 5 = Moyen | 2 = Max
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"  `
-    -Name ConsentPromptBehaviorAdmin `
-    -Value 2 `
-    -Description "UAC au maximum (mot de passe obligatoire pour les admins)" `
-    -Experimental
-
-# UAC sur bureau sécurisé | # 0 = Désactivé | 1 = Sur bureau sécurisé (défaut)
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
-    -Name "PromptOnSecureDesktop" `
-    -Value 1 `
-    -Description "UAC sur bureau sécurisé" `
-    -Experimental
-
-# Ctrl+Alt+Suppr obligatoire | # 0 = Obligatoire | 1 = Non demandé
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
-    -Name DisableCAD `
-    -Value 0 `
-    -Description "Ctrl+Alt+Suppr pour la connexion" `
-    -Experimental
+$Changes = @(
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "DontDisplayLastUserName"; Value = 1; Description = "Nom du dernier utilisateur à l'écran de connexion"; } # 0 = Afficher | 1 = Masquer
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer"; Name = "NoDriveTypeAutoRun"; Value = 255; Description = "Exécution automatique (USB, CD, périphériques amovibles)"; Experimental = $true; } # 0x91 = Défaut | 255 = Désactivé
+    @{Path = "HKLM:\SYSTEM\CurrentControlSet\Control\CI\Policy"; Name = "VerifiedAndReputablePolicyState"; Value = 0; Description = "Smart App Control"; } # 0 = Désactivé | 1 = Activé | 2 = Audit
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "ConsentPromptBehaviorAdmin"; Value = 2; Description = "UAC au maximum (mot de passe obligatoire pour les admins)"; Experimental = $true; } # 0 = Désactivé | 5 = Moyen | 2 = Max
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "PromptOnSecureDesktop"; Value = 1; Description = "UAC sur bureau sécurisé"; Experimental = $true; } # 0 = Désactivé | 1 = Activé
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "DisableCAD"; Value = 0; Description = "Ctrl+Alt+Suppr pour la connexion"; Experimental = $true; } # 0 = Obligatoire | 1 = Non demandé
+)
+foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
 #======================================================================
 # MàJ :
 #======================================================================
 Show-SectionHeader "⚙️ Paramètres"
 
-<# MARCHE PAS POUR LE MOMENT
-# Recevoir des mises à jour pour d'autres produits Microsoft | # 0 = Délai max | 0 = Immédiat
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" `
-    -Name "DeferFeatureUpdatesPeriodInDays" `
-    -Value 0 `
-    -Description "MàJ immédiate autres produits Microsoft"
-
-# Recevoir des mises à jour pour d'autres produits Microsoft | # 0 = Délai max | 0 = Immédiat
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update" `
-    -Name EnableFeaturedSoftware `
-    -Value 1 `
-    -Description "Activer Microsoft Update (autres produits Microsoft)"
-
-
-# Canal rapide pour Office/365 | # 16=Décalé | 48=Immédiat
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" `
-    -Name "BranchReadinessLevel" `
-    -Value 48 `
-    -Description "Canal Current Branch (Office via WU)"
-#>
-
-# Avertir lors d'un redémarrage nécessaire | # 0 = Ne pas avertir | 1 = Avertir
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" `
-    -Name RestartNotificationsAllowed2 `
-    -Value 1 `
-    -Description "Avertir lors d'un redémarrage nécessaire"
-
-
+$Changes = @(
+    # Mises à jour Microsoft Update (désactivé pour le moment)
+    # @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"; Name = "DeferFeatureUpdatesPeriodInDays"; Value = 0; Description = "MàJ immédiate autres produits Microsoft"; } # Ne fonctionne pas encore
+    # @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update"; Name = "EnableFeaturedSoftware"; Value = 1; Description = "Activer Microsoft Update (autres produits Microsoft)"; }
+    # @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate"; Name = "BranchReadinessLevel"; Value = 48; Description = "Canal Current Branch (Office via WU)"; }
+    @{Path = "HKLM:\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings"; Name = "RestartNotificationsAllowed2"; Value = 1; Description = "Avertir lors d'un redémarrage nécessaire"; } # 0 = Ne pas avertir | 1 = Avertir
+)
+foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
 #======================================================================
 # Performances Gaming :
 #======================================================================
 Show-SectionHeader "🎮 PERFORMANCES GAMING"
 
-# Désactivé GameDVR x2 | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\System\GameConfigStore" `
-    -Name GameDVR_Enabled `
-    -Value 0 `
-    -Description "GameDVR (enregistrement de jeu)"
+$Changes = @(
+    @{Path = "HKCU:\System\GameConfigStore"; Name = "GameDVR_Enabled"; Value = 0; Description = "GameDVR (enregistrement de jeu)"; } # Désactivé Game DVR x2 | # 0 = Désactivé | 1 = Activé
+    @{Path = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR"; Name = "AllowGameDVR"; Value = 0; Description = "GameDVR via stratégies (téléversement de clip de jeu)"; }
+    @{Path = "HKCU:\Software\Microsoft\GameBar"; Name = "GameBarEnabled"; Value = 0; Description = "Xbox Game Bar"; } # Désactivé Xbox Game Bar x2 | # 0 = Désactivé | 1 = Activé
+    @{Path = "HKCU:\Software\Microsoft\GameBar"; Name = "ShowStartupPanel"; Value = 0; Description = "Panneau de démarrage de Xbox Game Bar"; }
+)
 
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\GameDVR" `
-    -Name AllowGameDVR `
-    -Value 0 `
-    -Description "GameDVR via stratégies (téléversement de clip de jeu)"
-
-# Désactivé Xbox Game Bar x2 | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\GameBar" `
-    -Name GameBarEnabled `
-    -Value 0 `
-    -Description "Xbox Game Bar"
-
-Set-RegistryValueSafe `
-    -Path "HKCU:\Software\Microsoft\GameBar" `
-    -Name ShowStartupPanel `
-    -Value 0 `
-    -Description "Panneau de démarrage de Xbox Game Bar"
+foreach ($item in $Changes) {
+    Set-RegistryValueSafe @item
+}
 
 #======================================================================
 # Usefull :
 #======================================================================
 Show-SectionHeader "✨ PETIT PLUS"
 
-# 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock" `
-    -Name AllowDevelopmentWithoutDevLicense `
-    -Value 1 `
-    -Description "Mode développeur (installation d'applications sans licence)"
-
-# Afficher les messages BSOD détaillés | # 0 = Simple | 1 = Détails
-Set-RegistryValueSafe `
-    -Path "HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl" `
-    -Name DisplayParameters `
-    -Value 1 `
-    -Description "Détails complets des messages BSOD"
-
-
-# Accélérer l'ouverture des menus (optionnel) | # 400 = Vitesse par défaut | 0 = Instantané
-Set-RegistryValueSafe `
-    -Path "HKCU:\Control Panel\Desktop" `
-    -Name MenuShowDelay `
-    -Value 0 `
-    -Description "Vitesse d'ouverture des menus"
-
-# Supprimer le délai de démarrage des applications | # 0 = Activé | 1 = Désactivé
-Set-RegistryValueSafe `
-    -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize" `
-    -Name WaitForIdleState `
-    -Value 0 `
-    -Description "Délai de démarrage des applications"
-
-# Supprimer le délai de démarrage des applications | # 0 = Activé | 1 = Désactivé
-Set-RegistryValueSafe `
-    -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize" `
-    -Name StartupDelayInMSec `
-    -Value 1 `
-    -Description "Délai de démarrage des applications"
-
-# Mode Verbose pour le système (affiche les détails au démarrage) | # 0 = Désactivé | 1 = Activé
-Set-RegistryValueSafe `
-    -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" `
-    -Name VerboseStatus `
-    -Value 1 `
-    -Description "Mode Verbose Système"
-
+$Changes = @(
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"; Name = "AllowDevelopmentWithoutDevLicense"; Value = 1; Description = "Mode développeur (installation d'applications sans licence)"; } # 0 = Désactivé | 1 = Activé
+    @{Path = "HKLM:\SYSTEM\CurrentControlSet\Control\CrashControl"; Name = "DisplayParameters"; Value = 1; Description = "Détails complets des messages BSOD"; } # 0 = Simple | 1 = Détails
+    @{Path = "HKCU:\Control Panel\Desktop"; Name = "MenuShowDelay"; Value = 0; Description = "Vitesse d'ouverture des menus"; } # 400 = Défaut | 0 = Instantané
+    @{Path = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize"; Name = "WaitForIdleState"; Value = 0; Description = "Délai de démarrage des applications"; } # 0 = Activé | 1 = Désactivé
+    @{Path = "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize"; Name = "StartupDelayInMSec"; Value = 1; Description = "Délai de démarrage des applications"; } # 0 = Activé | 1 = Désactivé
+    @{Path = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"; Name = "VerboseStatus"; Value = 1; Description = "Mode Verbose Système"; } # 0 = Désactivé | 1 = Activé
+)
+foreach ($item in $Changes) { Set-RegistryValueSafe @item }
 
 #======================================================================
 # AppX :
@@ -972,7 +509,6 @@ if (-not $User) {
         )
 
         foreach ($app in $AppxToRemove) {
-
             $appx = Get-AppxPackage -Name $app -AllUsers | Select-Object -First 1
             if ($appx -and $appx.Status -eq "OK") {
                 try {
@@ -980,7 +516,7 @@ if (-not $User) {
                     Write-Status SUCCESS "App supprimée : $app"
                 }
                 catch {
-                    Write-Status SKIP "Échec suppression $app : $($_.Exception.Message)"
+                    Write-Status ERROR "Échec suppression $app : $($_.Exception.Message)"
                 }
 
                 # Provisionnés (séparé pour éviter double erreur)
@@ -988,10 +524,10 @@ if (-not $User) {
                 if ($prov) {
                     try {
                         $prov | Remove-AppxProvisionedPackage -Online -ErrorAction Stop
-                        Write-Status SUCCESS "Provisionné supprimé : $app"
+                        Write-Status SUCCESS "Paquet supprimé : $app"
                     }
                     catch {
-                        Write-Status SKIP "Provisionné non supprimé : $app"
+                        Write-Status ERROR "Paquet non supprimé : $app"
                     }
                 }
             }
@@ -1073,26 +609,27 @@ else {
 
 Show-SectionHeader "🔴 SERVICES"
 
-# Télémétrie
 if (-not $User) {
-    Stop-Service -Name "DiagTrack" -Force
-    Set-Service -Name "DiagTrack" -StartupType Disabled
-    sc.exe failure "DiagTrack" reset= 0 actions= none/0/none/0/none/0 | Out-Null
+    $Services = @(
+        "DiagTrack",
+        "diagsvc",
+        "dmwappushservice",
+        "WerSvc"
+    )
 
-    Stop-Service -Name "diagsvc" -Force
-    Set-Service -Name "diagsvc" -StartupType Disabled
-    sc.exe failure "diagsvc" reset= 0 actions= none/0/none/0/none/0 | Out-Null
-
-
-    Stop-Service -Name "dmwappushservice" -Force
-    Set-Service -Name "dmwappushservice" -StartupType Disabled
-    sc.exe failure "dmwappushservice" reset= 0 actions= none/0/none/0/none/0 | Out-Null
-
-    Stop-Service -Name "WerSvc" -Force
-    Set-Service -Name "WerSvc" -StartupType Disabled
-    sc.exe failure "WerSvc" reset= 0 actions= none/0/none/0/none/0 | Out-Null
-
-    Write-Status SUCCESS "Services de télémétrie désactivée"
+    foreach ($item in $Services) {
+        try {
+            if (Get-Service -Name $item -ErrorAction Stop) {
+                Stop-Service -Name $item -Force -ErrorAction Stop
+                Set-Service -Name $item -StartupType Disabled -ErrorAction Stop
+                sc.exe failure $item reset= 0 actions= none/0/none/0/none/0 | Out-Null
+                Write-Status SUCCESS "Service désactivé : $item"
+            }
+        }
+        catch {
+            Write-Status SKIP "Impossible de désactiver : $item"
+        }
+    }
 }
 else {
     Write-Status USER "Services de télémétrie ignorés"
@@ -1122,7 +659,7 @@ if (-not $User) {
             Write-Status SUCCESS "Tâche désactivée : $task"
         }
         catch {
-            Write-Status SKIP "Impossible de désactiver : $task"
+            Write-Status ERROR "Impossible de désactiver : $task"
         }
     }
 }
@@ -1132,23 +669,34 @@ else {
 
 
 #======================================================================
-# Nettoyage et redémarrage :
+# Nettoyage :
 #======================================================================
 
 Show-SectionHeader "🧹 NETTOYAGE"
 
 if (Test-Path "C:\Windows.old") {
     Remove-Item "C:\Windows.old" -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Status INFO "Windows.old supprimé"
+    Write-Status SUCCESS "Windows.old supprimé"
 }
 else {
-    Write-Status INFO "Windows.old non présent"
+    Write-Status SKIP "Windows.old non présent"
 }
 
-Remove-Item "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item "C:\Windows\Temp\*" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item "C:\Windows\SoftwareDistribution\Download\*" -Recurse -Force -ErrorAction SilentlyContinue #Win update cache #admin
-Write-Status SUCCESS "Fichiers temporaires supprimés"
+$Temp = @(
+    "$env:TEMP\*",
+    "C:\Windows\Temp\*",
+    "C:\Windows\SoftwareDistribution\Download\*"
+)
+
+foreach ($item in $Temp) {
+    try {
+        Remove-Item $item -Recurse -Force -ErrorAction Stop
+        Write-Status SUCCESS "Nettoyage : $item"
+    }
+    catch {
+        Write-Status ERROR "Impossible de nettoyer : $item"
+    }
+}
 
 if (-not $Test) {
     Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
@@ -1202,6 +750,3 @@ else {
 
 Write-Host "Appuyez sur Entrée pour quitter..." -ForegroundColor Gray
 Read-Host
-
-
-
