@@ -215,7 +215,7 @@ if (-not $User) {
     }
 }
 else {
-    Write-Status USER "Mode utilisateur, gestion de licence ignorée`n"
+    Write-Status USER "Mode utilisateur, gestion de licence ignorée"
 }
 
 #======================================================================
