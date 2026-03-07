@@ -8,7 +8,7 @@
         "Status":  "✓"
     },
     {
-        "Name":  "PostInstall.ps1",
+        "Name":  "Post-Install.ps1",
         "Status":  "✓"
     },
     {
@@ -17,14 +17,6 @@
     },
     {
         "Name":  "Convert-ImageFormat.ps1",
-        "Status":  "→"
-    },
-    {
-        "Name":  "gmail with fichier.ps1",
-        "Status":  "→"
-    },
-    {
-        "Name":  "gmail with pré-email.ps1",
         "Status":  "→"
     },
     {
@@ -77,6 +69,14 @@
     },
     {
         "Name":  "OldMain.ps1",
+        "Status":  "→"
+    },
+    {
+        "Name":  "Open-Gmail.ps1",
+        "Status":  "→"
+    },
+    {
+        "Name":  "Open-GmailFile.ps1",
         "Status":  "→"
     },
     {

@@ -1,4 +1,5 @@
 ﻿param(
+    [Switch]$User,
     [switch]$Test
 )
 
@@ -7,11 +8,13 @@ $Global:StatusCounters = @{
     ERROR   = 0
     SKIP    = 0
     INFO    = 0
+    TEST    = 0
+    USER    = 0
 }
 
 function Write-Status {
     param(
-        [ValidateSet("SUCCESS", "ERROR", "SKIP", "INFO", "TEST")]$Type,
+        [ValidateSet("SUCCESS", "ERROR", "SKIP", "INFO", "TEST", "USER")]$Type,
         [string]$Message
     )
     $timestamp = Get-Date -Format "HH:mm:ss"
@@ -22,6 +25,7 @@ function Write-Status {
         "SKIP" { Write-Host " [$timestamp] - $Message" -ForegroundColor Yellow }
         "INFO" { Write-Host " [$timestamp] → $Message" -ForegroundColor Cyan }
         "TEST" { Write-Host " [$timestamp] ✎ [TEST] $Message" -ForegroundColor Magenta }
+        "USER" { Write-Host " [$timestamp] ✎ [USER] $Message" -ForegroundColor White }
     }
 }
 
@@ -45,8 +49,10 @@ function Set-RegistryValueSafe {
         [switch]$Experimental
     )
 
-    # Vérification des paramètres
-    #Write-Host "DEBUG: Test=$($Test) | Experimental=$Experimental" -ForegroundColor Cyan
+    if ($Path -like "HKLM:*" -and $User) {
+        Write-Status USER "Mode utilisateur, $Description ignorée (HKLM)"
+        return
+    }
 
     if ($Experimental -and $Test) {
         Write-Status TEST "$Description ignorée"
@@ -54,15 +60,13 @@ function Set-RegistryValueSafe {
     }
 
     try {
-        # Test réel : accès à la clé
         if (-not (Test-Path $Path)) {
             New-Item -Path $Path -Force | Out-Null
             Write-Status INFO "Clé créée : $Path"
         }
-
-        # Tentative d’écriture
         Set-ItemProperty -Path $Path -Name $Name -Value $Value -ErrorAction Stop
         Write-Status SUCCESS $Description
+
     }
     catch {
         if (-not (Test-Path $Path)) {
@@ -81,25 +85,70 @@ function Set-RegistryValueSafe {
 #======================================================================
 
 # Vérifie si le script est lancé en tant qu'administrateur et relance avec les paramètres
-$principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
-if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
-    Write-Status INFO "Elevation requise. Relance en administrateur..."
-    $allArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
-    if ($Test) { $allArgs += " -Test" }
-    Start-Process powershell.exe -ArgumentList $allArgs -Verb RunAs
-    exit
+#if (-not $User) {
+#    $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+#    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+#        Write-Status INFO "Elevation requise. Relance en administrateur..."
+#        $allArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+#        if ($Test) { $allArgs += " -Test" }
+#        Start-Process powershell.exe -ArgumentList $allArgs -Verb RunAs
+#        exit
+#    }
+#}
+#else {
+#    Write-Status USER "Mode utilisateur → TERMINAL OUVERT (modifs HKLM ignorées)"
+#    $allArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+#    if ($Test) { $allArgs += " -Test" }
+#    # ✅ SANS -User → brise la boucle !
+#    Start-Process powershell.exe -ArgumentList $allArgs -WorkingDirectory $PSScriptRoot
+#    exit
+#}
+
+
+
+# ANTI-BOUCLE : Vérif fichier temporaire
+$restartMarker = "$env:TEMP\$($MyInvocation.MyCommand.Name).restart"
+if (Test-Path $restartMarker) {
+    Remove-Item $restartMarker -Force
+    # 2ème lancement → ON CONTINUE (admin OU user)
+}
+else {
+    # 1er lancement
+    if (-not $User) {
+        # Sans -User → relance admin si besoin
+        $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+        if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)) {
+            Write-Status INFO "Elevation requise. Relance en administrateur..."
+            $allArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+            if ($Test) { $allArgs += " -Test" }
+            New-Item $restartMarker -ItemType File | Out-Null
+            Start-Process powershell.exe -ArgumentList $allArgs -Verb RunAs -WorkingDirectory $PSScriptRoot
+            exit
+        }
+    }
+    else {
+        Write-Status INFO "[USER]Mode utilisateur → nouveau terminal..."
+        $allArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" -User"
+        if ($Test) { $allArgs += " -Test" }
+        New-Item $restartMarker -ItemType File | Out-Null
+        Start-Process powershell.exe -ArgumentList $allArgs -WorkingDirectory $PSScriptRoot
+        exit
+    }
 }
 
 Clear-Host
-if (-not $Test) {
+
+if ($Test -and $User) {
     Write-Host ""
-    Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Blue
-    Write-Host "║             POST - INSTALL           ║" -ForegroundColor Blue
-    Write-Host "║          WRITTEN BY 1337phtm         ║" -ForegroundColor Blue
-    Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Blue
+    Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Magenta
+    Write-Host "║             POST - INSTALL           ║" -ForegroundColor Magenta
+    Write-Host "║          ✎ USER TEST - MODE          ║" -ForegroundColor Magenta
+    Write-Host "║          WRITTEN BY 1337phtm         ║" -ForegroundColor Magenta
+    Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Magenta
     Write-Host ""
+
 }
-else {
+elseif ($Test) {
     Write-Host ""
     Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Magenta
     Write-Host "║             POST - INSTALL           ║" -ForegroundColor Magenta
@@ -108,66 +157,87 @@ else {
     Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Magenta
     Write-Host ""
 }
+elseif ($User) {
+    Write-Host ""
+    Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Cyan
+    Write-Host "║             POST - INSTALL           ║" -ForegroundColor Cyan
+    Write-Host "║             ✎ USER - MODE            ║" -ForegroundColor Cyan
+    Write-Host "║          WRITTEN BY 1337phtm         ║" -ForegroundColor Cyan
+    Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Cyan
+    Write-Host ""
+}
+else {
+    Write-Host ""
+    Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Green
+    Write-Host "║             POST - INSTALL           ║" -ForegroundColor Green
+    Write-Host "║          WRITTEN BY 1337phtm         ║" -ForegroundColor Green
+    Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Green
+    Write-Host ""
+}
 
 #======================================================================
 # Clé de Licence :
 #======================================================================
 Show-SectionHeader "🔑 GESTION DE LA LICENCE WINDOWS"
 
-if (-not $Test) {
-    if ((Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").EditionID -eq "Professional") {
-        Write-Status SUCCESS "Professional edition already installed"
-    }
-    else {
-        $choice = Read-Host "Do you want to Upgrade your Windows to Pro ? (Y/N) "
-        if ($choice -eq "Y" -or $choice -eq "y") {
-            #slmgr /ipk W269N-WFGWX-YVC9B-4J6C9-T83GX #Clé de mise à niveau vers Pro
-            $lic = Get-WmiObject -Query "SELECT * FROM SoftwareLicensingProduct WHERE PartialProductKey IS NOT NULL"
-
-            if ($lic.Description -match "OEM_DM") {
-                Write-Host "Migration automatique impossible, ouverture de l'interface..."
-                Write-Host "Clé de licence copié dans le presse-papier, cliquez sur modifier la clé de produit et copiez la clé"
-                Start-Process ms-settings:activation -WindowStyle Hidden
-                Set-Clipboard -Value "VK7JG-NPHTM-C97JM-9MPGT-3V66T"
-            }
-            else {
-                slmgr /ipk VK7JG-NPHTM-C97JM-9MPGT-3V66T #Clé de mise à niveau vers Pro
-                #dism /online /Set-Edition:Professional /ProductKey:VK7JG-NPHTM-C97JM-9MPGT-3V66T /AcceptEula
-
-
-                $EditionId = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").EditionID
-                if ($EditionId -ne "Professional") {
-                    Set-RegistryValueSafe `
-                        -Path "\HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" `
-                        -Name EditionID `
-                        -Value "Professional" `
-                        -Description "Modif de l'Edition ID"
-                }
-
-                $ProductName = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ProductName
-                if ($ProductName -ne "Windows 11 Pro") {
-                    Set-RegistryValueSafe `
-                        -Path "\HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" `
-                        -Name ProductName `
-                        -Value "Windows 11 Pro" `
-                        -Description "Modif du ProductName"
-                }
-            }
+if (-not $User) {
+    if (-not $Test) {
+        if ((Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").EditionID -eq "Professional") {
+            Write-Status SUCCESS "Professional edition already installed"
         }
         else {
-            Write-Host "Upgrade skipped" -ForegroundColor Yellow
-            Write-Host ""
+            $choice = Read-Host "Do you want to Upgrade your Windows to Pro ? (Y/N) "
+            if ($choice -eq "Y" -or $choice -eq "y") {
+                #slmgr /ipk W269N-WFGWX-YVC9B-4J6C9-T83GX #Clé de mise à niveau vers Pro
+                $lic = Get-WmiObject -Query "SELECT * FROM SoftwareLicensingProduct WHERE PartialProductKey IS NOT NULL"
+
+                if ($lic.Description -match "OEM_DM") {
+                    Write-Host "Migration automatique impossible, ouverture de l'interface..."
+                    Write-Host "Clé de licence copié dans le presse-papier, cliquez sur modifier la clé de produit et copiez la clé"
+                    Start-Process ms-settings:activation -WindowStyle Hidden
+                    Set-Clipboard -Value "VK7JG-NPHTM-C97JM-9MPGT-3V66T"
+                }
+                else {
+                    slmgr /ipk VK7JG-NPHTM-C97JM-9MPGT-3V66T #Clé de mise à niveau vers Pro
+                    #dism /online /Set-Edition:Professional /ProductKey:VK7JG-NPHTM-C97JM-9MPGT-3V66T /AcceptEula
+
+
+                    $EditionId = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").EditionID
+                    if ($EditionId -ne "Professional") {
+                        Set-RegistryValueSafe `
+                            -Path "\HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" `
+                            -Name EditionID `
+                            -Value "Professional" `
+                            -Description "Modif de l'Edition ID"
+                    }
+
+                    $ProductName = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").ProductName
+                    if ($ProductName -ne "Windows 11 Pro") {
+                        Set-RegistryValueSafe `
+                            -Path "\HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" `
+                            -Name ProductName `
+                            -Value "Windows 11 Pro" `
+                            -Description "Modif du ProductName"
+                    }
+                }
+            }
+            else {
+                Write-Status INFO "Upgrade skipped`n"
+            }
+        }
+    }
+    else {
+        if ((Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").EditionID -eq "Professional") {
+            Write-Status SUCCESS "Professional edition already installed"
+        }
+        else {
+            Write-Status INFO "No Professional licence Installed"
+            Write-Status TEST "Modification de licence ignorée"
         }
     }
 }
 else {
-    if ((Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion").EditionID -eq "Professional") {
-        Write-Status SUCCESS "Professional edition already installed"
-    }
-    else {
-        Write-Status INFO "No Professional licence Installed"
-        Write-Status TEST "Modification de licence ignorée"
-    }
+    Write-Status USER "Mode utilisateur, gestion de licence ignorée`n"
 }
 
 #======================================================================
@@ -175,52 +245,57 @@ else {
 #======================================================================
 Show-SectionHeader "⚡ PARAMÈTRES D'ALIMENTATION"
 
-if (-not $Test) {
-    try {
-        #Mise en veille prolongé :
-        powercfg /hibernate on
+if (-not $user) {
+    if (-not $Test) {
+        try {
+            #Mise en veille prolongé :
+            powercfg /hibernate on
 
-        #Action qui suit la fermeture du capot :
-        powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 1 #Sur secteur AC | 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-        powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 2 #Sur batterie DC | 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-        Write-Status SUCCESS "Paramètres de fermeture du capot configurés"
+            #Action qui suit la fermeture du capot :
+            powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 1 #Sur secteur AC | 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 2 #Sur batterie DC | 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            Write-Status SUCCESS "Paramètres de fermeture du capot configurés"
 
-        #Bouton Marche/Arrêt :
-        powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS PBUTTONACTION 1 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-        powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS PBUTTONACTION 2 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-        Write-Status SUCCESS "Paramètres du bouton Marche/Arrêt configurés"
+            #Bouton Marche/Arrêt :
+            powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS PBUTTONACTION 1 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS PBUTTONACTION 2 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            Write-Status SUCCESS "Paramètres du bouton Marche/Arrêt configurés"
 
-        #Bouton veille :
-        powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS SBUTTONACTION 1 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-        powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS SBUTTONACTION 2 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-        Write-Status SUCCESS "Paramètres du bouton veille configurés"
+            #Bouton veille :
+            powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS SBUTTONACTION 1 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            powercfg /setdcvalueindex SCHEME_CURRENT SUB_BUTTONS SBUTTONACTION 2 # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            Write-Status SUCCESS "Paramètres du bouton veille configurés"
 
-        # Activé le verrouillage auto après veille
-        powercfg /setacvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 1 # 0 = Désactivé | 1 = Activé
-        powercfg /setdcvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 1 # 0 = Désactivé | 1 = Activé
-        Write-Status SUCCESS "Verrouillage automatique après veille activé"
+            # Activé le verrouillage auto après veille
+            powercfg /setacvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 1 # 0 = Désactivé | 1 = Activé
+            powercfg /setdcvalueindex SCHEME_CURRENT SUB_NONE CONSOLELOCK 1 # 0 = Désactivé | 1 = Activé
+            Write-Status SUCCESS "Verrouillage automatique après veille activé"
 
-        # Délai de mise en veille
-        powercfg /change standby-timeout-ac 0 # 0 : never
-        powercfg /change standby-timeout-dc 0 # 0 : never
-        Write-Status SUCCESS "Paramètres de mise en veille configurés"
+            # Délai de mise en veille
+            powercfg /change standby-timeout-ac 0 # 0 : never
+            powercfg /change standby-timeout-dc 0 # 0 : never
+            Write-Status SUCCESS "Paramètres de mise en veille configurés"
 
-        # Délai d'extinction de l'écran
-        powercfg /change monitor-timeout-ac 0 # 0 : never
-        powercfg /change monitor-timeout-dc 0 # 0 : never
-        Write-Status SUCCESS "Paramètres d'extinction de l'écran configurés"
+            # Délai d'extinction de l'écran
+            powercfg /change monitor-timeout-ac 0 # 0 : never
+            powercfg /change monitor-timeout-dc 0 # 0 : never
+            Write-Status SUCCESS "Paramètres d'extinction de l'écran configurés"
 
-        #Validation des paramètres :
-        powercfg /setactive SCHEME_CURRENT
-        Write-Status SUCCESS "Paramètres d'alimentation appliqués"
+            #Validation des paramètres :
+            powercfg /setactive SCHEME_CURRENT
+            Write-Status SUCCESS "Paramètres d'alimentation appliqués"
+        }
+        catch {
+            Write-Status ERROR "Erreur lors de la modification des paramètres d'alimentation : $($_.Exception.Message)"
+        }
+
     }
-    catch {
-        Write-Status ERROR "Erreur lors de la configuration de l'alimentation : $($_.Exception.Message)"
+    else {
+        Write-Status TEST "Modification des paramètres d'alimentation ignorée"
     }
-
 }
 else {
-    Write-Status TEST "Modification des paramètres d'alimentation ignorée"
+    Write-Status USER "Modification des paramètres d'alimentation ignorée"
 }
 
 #======================================================================
@@ -900,61 +975,66 @@ Set-RegistryValueSafe `
 #======================================================================
 Show-SectionHeader "🗑️ SUPPRESSION DES BLOATWARES VIA APPX"
 
-if (-not $Test) {
-    # AppX classiques
-    $AppxToRemove = @(
-        "Microsoft.BingNews",
-        "Microsoft.BingWeather",
-        "Microsoft.GetHelp",
-        "Microsoft.Getstarted",
-        "Microsoft.MicrosoftOfficeHub",
-        "Microsoft.MicrosoftSolitaireCollection",
-        "Microsoft.MicrosoftStickyNotes",
-        "Microsoft.OutlookForWindows",
-        "Microsoft.PowerAutomateDesktop",
-        "Microsoft.People",
-        "Microsoft.SkypeApp",
-        "Microsoft.Todos",
-        "Microsoft.Xbox.TCUI",
-        "Microsoft.XboxGameOverlay",
-        "Microsoft.XboxGamingOverlay",
-        "Microsoft.XboxIdentityProvider",
-        "Microsoft.XboxSpeechToTextOverlay",
-        "Microsoft.YourPhone",
-        "Microsoft.ZuneMusic"
-    )
+if (-not $User) {
+    if (-not $Test) {
+        # AppX classiques
+        $AppxToRemove = @(
+            "Microsoft.BingNews",
+            "Microsoft.BingWeather",
+            "Microsoft.GetHelp",
+            "Microsoft.Getstarted",
+            "Microsoft.MicrosoftOfficeHub",
+            "Microsoft.MicrosoftSolitaireCollection",
+            "Microsoft.MicrosoftStickyNotes",
+            "Microsoft.OutlookForWindows",
+            "Microsoft.PowerAutomateDesktop",
+            "Microsoft.People",
+            "Microsoft.SkypeApp",
+            "Microsoft.Todos",
+            "Microsoft.Xbox.TCUI",
+            "Microsoft.XboxGameOverlay",
+            "Microsoft.XboxGamingOverlay",
+            "Microsoft.XboxIdentityProvider",
+            "Microsoft.XboxSpeechToTextOverlay",
+            "Microsoft.YourPhone",
+            "Microsoft.ZuneMusic"
+        )
 
-    foreach ($app in $AppxToRemove) {
+        foreach ($app in $AppxToRemove) {
 
-        $appx = Get-AppxPackage -Name $app -AllUsers | Select-Object -First 1
-        if ($appx -and $appx.Status -eq "OK") {
-            try {
-                Remove-AppxPackage -Package $appx.PackageFullName -AllUsers -ErrorAction Stop
-                Write-Status SUCCESS "App supprimée : $app"
-            }
-            catch {
-                Write-Status SKIP "Échec suppression $app : $($_.Exception.Message)"
-            }
-
-            # Provisionnés (séparé pour éviter double erreur)
-            $prov = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $app }
-            if ($prov) {
+            $appx = Get-AppxPackage -Name $app -AllUsers | Select-Object -First 1
+            if ($appx -and $appx.Status -eq "OK") {
                 try {
-                    $prov | Remove-AppxProvisionedPackage -Online -ErrorAction Stop
-                    Write-Status SUCCESS "Provisionné supprimé : $app"
+                    Remove-AppxPackage -Package $appx.PackageFullName -AllUsers -ErrorAction Stop
+                    Write-Status SUCCESS "App supprimée : $app"
                 }
                 catch {
-                    Write-Status SKIP "Provisionné non supprimé : $app"
+                    Write-Status SKIP "Échec suppression $app : $($_.Exception.Message)"
+                }
+
+                # Provisionnés (séparé pour éviter double erreur)
+                $prov = Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq $app }
+                if ($prov) {
+                    try {
+                        $prov | Remove-AppxProvisionedPackage -Online -ErrorAction Stop
+                        Write-Status SUCCESS "Provisionné supprimé : $app"
+                    }
+                    catch {
+                        Write-Status SKIP "Provisionné non supprimé : $app"
+                    }
                 }
             }
+            else {
+                Write-Status SKIP "App non présente : $app"
+            }
         }
-        else {
-            Write-Status SKIP "App non présente : $app"
-        }
+    }
+    else {
+        Write-Status TEST "AppX ignoré"
     }
 }
 else {
-    Write-Status TEST "AppX ignoré"
+    Write-Status USER "AppX ignoré car non-admin"
 }
 
 #======================================================================
@@ -969,46 +1049,51 @@ $WingetApps = @(
     "Clipchamp",
     "Xbox"
 )
-if (-not $Test) {
-    foreach ($pkg in $WingetApps) {
+if (-not $User) {
+    if (-not $Test) {
+        foreach ($pkg in $WingetApps) {
 
-        winget uninstall --silent --accept-source-agreements $pkg | Out-Null
+            winget uninstall --silent --accept-source-agreements $pkg | Out-Null
+            $err = $LASTEXITCODE
+            if ($err -eq 0) {
+                Write-Status SUCCESS "$pkg désinstallé"
+            }
+            else {
+                Write-Status SKIP "$pkg déjà désinstallé"
+            }
+        }
+        # Désinstallation des widgets
+        winget uninstall -e --id 9MSSGKG348SP --verbose | Out-Null
         $err = $LASTEXITCODE
         if ($err -eq 0) {
-            Write-Status SUCCESS "$pkg désinstallé"
+            Write-Status SUCCESS "Widget désinstallé"
+        }
+        elseif ($err -eq 0x80070002) {
+            Write-Status ERROR "Échec de la désinstallation du Widget"
         }
         else {
-            Write-Status SKIP "$pkg déjà désinstallé"
+            Write-Status SKIP "Widget déjà désinstallé ou non présent"
+        }
+
+        # Désinstallation des widgets2
+        winget uninstall -e --id MSIX\Microsoft.WidgetsPlatformRuntime_1.6.14.0_x64__8wekyb3d8bbwe --verbose | Out-Null
+        $err = $LASTEXITCODE
+        if ($err -eq 0) {
+            Write-Status SUCCESS "Widget2 désinstallé"
+        }
+        elseif ($err -eq 0x80070002) {
+            Write-Status ERROR "Échec de la désinstallation du Widget2"
+        }
+        else {
+            Write-Status SKIP "Widget2 déjà désinstallé ou non présent"
         }
     }
-    # Désinstallation des widgets
-    winget uninstall -e --id 9MSSGKG348SP --verbose | Out-Null
-    $err = $LASTEXITCODE
-    if ($err -eq 0) {
-        Write-Status SUCCESS "Widget désinstallé"
-    }
-    elseif ($err -eq 0x80070002) {
-        Write-Status ERROR "Échec de la désinstallation du Widget"
-    }
     else {
-        Write-Status SKIP "Widget déjà désinstallé ou non présent"
-    }
-
-    # Désinstallation des widgets2
-    winget uninstall -e --id MSIX\Microsoft.WidgetsPlatformRuntime_1.6.14.0_x64__8wekyb3d8bbwe --verbose | Out-Null
-    $err = $LASTEXITCODE
-    if ($err -eq 0) {
-        Write-Status SUCCESS "Widget2 désinstallé"
-    }
-    elseif ($err -eq 0x80070002) {
-        Write-Status ERROR "Échec de la désinstallation du Widget2"
-    }
-    else {
-        Write-Status SKIP "Widget2 déjà désinstallé ou non présent"
+        Write-Status TEST "Winget ignoré"
     }
 }
 else {
-    Write-Status TEST "Winget ignoré"
+    Write-Status USER "Winget ignoré car non-admin"
 }
 
 #======================================================================
@@ -1104,8 +1189,12 @@ Write-Host "║               ✅ CONFIGURATION TERMINÉE              ║" -For
 Write-Host "╚══════════════════════════════════════════════════════╝`n" -ForegroundColor Green
 
 if ($StatusCounters.TEST -gt 0) {
-    Write-Host "  [TEST] : $($StatusCounters.TEST) settings skipped`n" -ForegroundColor Magenta
+    Write-Host "  [TEST] : $($StatusCounters.TEST) settings skipped" -ForegroundColor Magenta
 }
+if ($StatusCounters.USER -gt 0) {
+    Write-Host "  [USER] : $($StatusCounters.USER) settings skipped" -ForegroundColor White
+}
+Write-Host ""
 Write-Host "  ✓ SUCCESS : $($StatusCounters.SUCCESS)" -ForegroundColor Green
 Write-Host "  ✗ ERROR   : $($StatusCounters.ERROR)" -ForegroundColor Red
 Write-Host "  - SKIP    : $($StatusCounters.SKIP)" -ForegroundColor Yellow

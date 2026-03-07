@@ -1,0 +1,14 @@
+﻿This script is a Windows 11 Post-Install script, it modifies the behavior, appearance and applications of Windows based on registry keys (cf. ...\maintenance\Post-Install.ps1)
+
+
+# In Normal Mode (admins rights needed)
+.\Post-Install.ps1
+
+# In User Mode
+.\Post-Install.ps1 -User
+
+# In test Mode
+.\Post-Install.ps1 -Test
+
+# In User Test Mode
+.\Post-Install.ps1 -User -Test

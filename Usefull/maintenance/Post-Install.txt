@@ -1,5 +1,12 @@
 ctrl alt suppr
 
+Faire pour admin et non admin + mode test et user a test compatibilité des deux ensemble
+genre -User
+if (-not $User)
+HKLM
+else
+non permission
+
 menu démarrer :
 	documents
 	downlaods
