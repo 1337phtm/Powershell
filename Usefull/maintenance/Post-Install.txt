@@ -1,4 +1,9 @@
-ctrl alt suppr
+ctrl alt suppr # a verif
+
+PBBBBBBBBBBBBBBBBBB ALIM NON FONCTIONEL
+Write host $$item.cmd
+
+Modif firewall rules active
 
 Faire pour admin et non admin + mode test et user a test compatibilité des deux ensemble
 genre -User
