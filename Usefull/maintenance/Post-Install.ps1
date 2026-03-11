@@ -234,22 +234,22 @@ if (-not $User) {
         }
 
         $AC = @(
-            @{Cmd = "SUB_BUTTONS LIDACTION 1"; Desc = "Fermeture du capot (AC) → Veille"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            @{Cmd = "SUB_BUTTONS PBUTTONACTION 1"; Desc = "Bouton Marche/Arrêt (AC) → Veille"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            @{Cmd = "SUB_BUTTONS SBUTTONACTION 1"; Desc = "Bouton veille (AC) → Veille"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            @{Cmd = "SUB_NONE CONSOLELOCK 1"; Desc = "Verrouillage auto après veille (AC)"; } # 0 = Désactivé | 1 = Activé
+            @{Cmd = @("SUB_BUTTONS", "LIDACTION", 1); Desc = "Fermeture du capot (AC) → Veille"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = @("SUB_BUTTONS", "PBUTTONACTION", 1); Desc = "Bouton Marche/Arrêt (AC) → Veille"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = @("SUB_BUTTONS", "SBUTTONACTION", 1); Desc = "Bouton veille (AC) → Veille"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = @("SUB_NONE", "CONSOLELOCK", 1); Desc = "Verrouillage auto après veille (AC)"; } # 0 = Désactivé | 1 = Activé
         )
 
         $DC = @(
-            @{Cmd = "SUB_BUTTONS LIDACTION 2"; Desc = "Fermeture du capot (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            @{Cmd = "SUB_BUTTONS PBUTTONACTION 2"; Desc = "Bouton Marche/Arrêt (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            @{Cmd = "SUB_BUTTONS SBUTTONACTION 2"; Desc = "Bouton veille (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
-            @{Cmd = "SUB_NONE CONSOLELOCK 1"; Desc = "Verrouillage auto après veille (DC)"; } # 0 = Désactivé | 1 = Activé
+            @{Cmd = @("SUB_BUTTONS", "LIDACTION", 2); Desc = "Fermeture du capot (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = @("SUB_BUTTONS", "PBUTTONACTION", 2); Desc = "Bouton Marche/Arrêt (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = @("SUB_BUTTONS", "SBUTTONACTION", 2); Desc = "Bouton veille (DC) → Hibernate"; } # 0 = Rien | 1 = Veille | 2 = Hibernate | 3 = Arrêt
+            @{Cmd = @("SUB_NONE", "CONSOLELOCK", 2); Desc = "Verrouillage auto après veille (DC)"; } # 0 = Désactivé | 1 = Activé
         )
 
         foreach ($item in $AC) {
             try {
-                powercfg /setacvalueindex SCHEME_CURRENT $($item.Cmd)
+                powercfg /setacvalueindex SCHEME_CURRENT $item.Cmd
                 Write-Status SUCCESS $item.Desc
             }
             catch {
