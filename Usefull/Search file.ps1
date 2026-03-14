@@ -43,7 +43,7 @@ switch ($drivechoice.ToUpper()) {
             Write-Host ""
             $files = Get-ChildItem -Path $drive.Root -Filter "$($file)*.*" -Recurse -ErrorAction SilentlyContinue -Force
             if ($files.count -eq 0) {
-                Write-Status "INFO" "No $file files found in $($selectedDrive.Root)"
+                Write-Status "INFO" "No $file files found in $($drive.Root)"
             }
             else {
                 $files | ForEach-Object { Write-Host $_.FullName }
