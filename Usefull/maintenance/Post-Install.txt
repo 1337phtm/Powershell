@@ -1,5 +1,7 @@
 ctrl alt suppr # a verif
 
+rajouter dans la fonction de clé, la création de clé avec le $name pour savoir le path mais aussi le nom
+
 Modif firewall rules active
 
 menu démarrer :
