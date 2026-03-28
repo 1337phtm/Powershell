@@ -21,7 +21,7 @@ Modif de clé activation Windows | presque OK but install a tester voir pour red
 une fois sur win pro activer bureau à distance
 
 Activer hyper-V (système --> avancé --> Espace de travail virtuels)
-Bureau a distance 
+Bureau a distance
 Portail d'appaareils
 modifier la stratégied'éxecution pour PWSH
 
