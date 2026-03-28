@@ -62,7 +62,7 @@ function Set-RegistryValueSafe {
     try {
         if (-not (Test-Path $Path)) {
             New-Item -Path $Path -Force | Out-Null
-            Write-Status INFO "Clé créée : $Path"
+            Write-Status INFO "Clé $Name créée : $Path"
         }
         Set-ItemProperty -Path $Path -Name $Name -Value $Value -ErrorAction Stop
         Write-Status SUCCESS $Description
