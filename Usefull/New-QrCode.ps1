@@ -27,5 +27,3 @@ try {
 catch {
     Write-Status Error "Network connection required`n"
 }
-
-
