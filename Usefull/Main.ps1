@@ -3,7 +3,7 @@
     [string]$JsonFile = "scripts_status.json"
 )
 
-. $PSScriptRoot\Setup.ps1
+. $PSScriptRoot\Setup.ps1 -LogName $PSCommandPath
 
 # 1. Récupérer tous les fichiers .ps1/.psm1 du dossier (récursif, exclut certains dossiers)
 $files = Get-ChildItem -Path $FolderPath -Recurse -Include *.ps1, *.psm1 -ErrorAction SilentlyContinue |
@@ -111,3 +111,4 @@ switch ($choice) {
         }
     }
 }        $jsonContent += $newEntry
+

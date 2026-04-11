@@ -1,11 +1,66 @@
-﻿$Global:StatusCounters = @{
+﻿#====================================================================================
+#   GLOBAL - Setup
+#   Auteur : 1337phtm
+#   Usage dans un script : . $PSScriptRoot\Setup.ps1 -LogName $PSCommandPath
+#====================================================================================
+
+param(
+    [string]$LogName
+)
+
+#======================================================================
+# --- Logs ---
+#======================================================================
+
+#function Start-Log {
+# --- Dossiers de logs ---
+$Global:WTKRoot = Join-Path $env:LOCALAPPDATA "Github - 1337phtm"
+$Global:LogDir = Join-Path $Global:WTKRoot "GLOBAL_Logs"
+
+foreach ($dir in @($Global:WTKRoot, $Global:LogDir)) {
+    if (-not (Test-Path $dir)) {
+        New-Item -ItemType Directory -Path $dir | Out-Null
+    }
+}
+
+# --- Fichiers de log ---
+$info = [System.IO.Path]::GetFileNameWithoutExtension($LogName)
+
+$Global:ScriptDir = Join-Path $Global:LogDir "$($info)_Logs"
+
+foreach ($ScriptDir in @($Global:ScriptDir)) {
+    if (-not (Test-Path $ScriptDir)) {
+        New-Item -ItemType Directory -Path $ScriptDir | Out-Null
+    }
+}
+
+$Global:LogFile = Join-Path $Global:ScriptDir "$($info).log"
+$Global:ErrorLogFile = Join-Path $Global:ScriptDir "$($info).error.log"
+
+foreach ($file in @($Global:LogFile, $Global:ErrorLogFile)) {
+    if (-not (Test-Path $file)) {
+        New-Item -ItemType File -Path $file | Out-Null
+    }
+}
+#}
+
+Add-Content -Path $Global:LogFile -Value "" -Force
+Add-Content -Path $Global:LogFile -Value "" -Force
+$LogEntry = "Démarrage du script : $($LogName) - $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")"
+Add-Content -Path $Global:LogFile -Value $logEntry -Force
+Add-Content -Path $Global:LogFile -Value "" -Force
+Add-Content -Path $Global:LogFile -Value "" -Force
+
+#======================================================================
+# --- Affichage ---
+#======================================================================
+
+$Global:StatusCounters = @{
     SUCCESS = 0
     ERROR   = 0
     SKIP    = 0
     INFO    = 0
 }
-
-#$Global:LogFile = $null
 
 function Show-SectionHeader {
     param([string]$Title)
@@ -14,9 +69,18 @@ function Show-SectionHeader {
     Write-Host "║ $Title" -ForegroundColor Blue
     Write-Host "╚══════════════════════════════════════════╝" -ForegroundColor Blue
     Write-Host ""
+    $logEntry = ""
+    Add-Content -Path $Global:LogFile -Value $logEntry -Force
+    $logEntry = "╔══════════════════════════════════════════╗"
+    Add-Content -Path $Global:LogFile -Value $logEntry -Force
+    $logEntry = "║ $Title"
+    Add-Content -Path $Global:LogFile -Value $logEntry -Force
+    $logEntry = "╚══════════════════════════════════════════╝"
+    Add-Content -Path $Global:LogFile -Value $logEntry -Force
+    $logEntry = ""
+    Add-Content -Path $Global:LogFile -Value $logEntry -Force
+
 }
-
-
 
 function Write-Status {
     param(
@@ -27,7 +91,6 @@ function Write-Status {
     $timestamp = Get-Date -Format "HH:mm:ss"
     $Global:StatusCounters[$Type]++
 
-    # AFFICHAGE CONSOLE (inchangé)
     switch ($Type) {
         "SUCCESS" { Write-Host " [$timestamp] ✓  $Message" -ForegroundColor Green }
         "ERROR" { Write-Host " [$timestamp] ✗ $Message" -ForegroundColor Red }
@@ -36,11 +99,13 @@ function Write-Status {
         #"TEST" { Write-Host " [$timestamp] ✎ [TEST] $Message" -ForegroundColor Magenta }
     }
 
-    # LOG AUTOMATIQUE (NOUVEAU)
-    #if ($Global:LogFile) {
-    #    $logEntry = "[$timestamp] [$Type] $Message"
-    #    Add-Content -Path $Global:LogFile -Value $logEntry -Force
-    #}
+    # LOG AUTOMATIQUE
+    $logEntry = "[$timestamp] [$Type] $Message"
+    Add-Content -Path $Global:LogFile -Value $logEntry -Force
+
+    if ($Type -eq "ERROR") {
+        Add-Content -Path $Global:ErrorLogFile -Value $logEntry -Force
+    }
 }
 
 function Show-Counters {
@@ -49,35 +114,9 @@ function Show-Counters {
     Write-Host "  ✗ ERROR   : $($Global:StatusCounters.ERROR)" -ForegroundColor Red
     Write-Host "  - SKIP    : $($Global:StatusCounters.SKIP)" -ForegroundColor Yellow
     Write-Host "  → INFO    : $($Global:StatusCounters.INFO)`n" -ForegroundColor Cyan
-    #if ($Global:LogFile) {
-    #    Write-Host "  📝 Log    : $Global:LogFile" -ForegroundColor Gray
-    #}
+    Write-Host "  📝 Logs    : $($Global:LogFile)`n" -ForegroundColor Gray
 }
 
-#LOG :
-
-#function Get-CurrentScriptName {
-#if ($MyInvocation.ScriptName -and $MyInvocation.ScriptName -ne '.') {
-#    return [System.IO.Path]::GetFileNameWithoutExtension($MyInvocation.ScriptName)
-#}
-#if ($PSCommandPath) {
-#    return [System.IO.Path]::GetFileNameWithoutExtension($PSCommandPath)
-#}
-#}
-
-#function New-LogSetup {
-# Crée dossier Logs + définit fichier avec nom script
-
-#$ScriptBaseName = Get-CurrentScriptName
-#$LogDir = "$env:TEMP\Powershell\Logs"
-#New-Item -Path $LogDir -ItemType Directory -Force | Out-Null
-#$Global:LogFile = "$LogDir\$ScriptBaseName-$(Get-Date -Format 'yyyyMMdd').log"
-#
-#Write-Host "📝 Logs → $Global:LogFile" -ForegroundColor Cyan
-#}
 
 
-# INITIALISATION AUTO (optionnel)
-#New-LogSetup
-#
-#Get-CurrentScriptName
+#Start-Log

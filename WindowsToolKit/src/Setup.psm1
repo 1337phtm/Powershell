@@ -5,9 +5,9 @@
 # ============================
 
 
-# ============================
+# =======================================
 # Fonctions de configuration et de log
-# ============================
+# =======================================
 #======================================================================
 # Fonction debug | use with .\main.ps1 -DebugMode
 #======================================================================
@@ -28,9 +28,13 @@ else {
 
 $Global:ErrorActionPreference = "Stop"
 
-# --- Dossiers ---
-$Global:WTKRoot = Join-Path $env:LOCALAPPDATA "WindowsToolkit"
-$Global:LogDir = Join-Path $Global:WTKRoot "Logs"
+
+#======================================================================
+# --- Logs ---
+#======================================================================
+# --- Dossiers de logs ---
+$Global:WTKRoot = Join-Path $env:LOCALAPPDATA "Github - 1337phtm"
+$Global:LogDir = Join-Path $Global:WTKRoot "WTK_Logs"
 
 foreach ($dir in @($Global:WTKRoot, $Global:LogDir)) {
     if (-not (Test-Path $dir)) {
@@ -39,16 +43,25 @@ foreach ($dir in @($Global:WTKRoot, $Global:LogDir)) {
 }
 
 # --- Fichiers de log ---
-$Global:LogFile = Join-Path $Global:LogDir "WindowsToolkit.log"
-$Global:ErrorLogFile = Join-Path $Global:LogDir "WindowsToolkit.error.log"
+function Start-Setup {
+    param(
+        [string]$CallerPath
+    )
 
-foreach ($file in @($Global:LogFile, $Global:ErrorLogFile)) {
-    if (-not (Test-Path $file)) {
-        New-Item -ItemType File -Path $file | Out-Null
+    $info = [System.IO.Path]::GetFileNameWithoutExtension($CallerPath)
+
+    $Global:LogFile = Join-Path $Global:LogDir "$($info).log"
+    $Global:ErrorLogFile = Join-Path $Global:LogDir "$($info).error.log"
+
+    foreach ($file in @($Global:LogFile, $Global:ErrorLogFile)) {
+        if (-not (Test-Path $file)) {
+            New-Item -ItemType File -Path $file | Out-Null
+        }
     }
 }
 
-# --- Fonction de log ---
+# --- Ecriture de log ---
+
 function Write-Log {
     param(
         [string]$Message,
@@ -162,4 +175,4 @@ function Stop-Screen {
 # Export
 #======================================================================
 
-Export-ModuleMember -Function Write-Log, Start-Log, Stop-Screen, Write-ErrorLog
+Export-ModuleMember -Function Write-Log, Start-Log, Stop-Screen, Write-ErrorLog, Start-Setup

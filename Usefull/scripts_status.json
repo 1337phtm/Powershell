@@ -101,7 +101,7 @@
     },
     {
         "Name":  "Setup.ps1",
-        "Status":  "→"
+        "Status":  "?"
     },
     {
         "Name":  "Show-BsodBestView.ps1",
@@ -126,6 +126,10 @@
     {
         "Name":  "snorlabel.ps1",
         "Status":  "→"
+    },
+    {
+        "Name":  "tesst.ps1",
+        "Status":  "?"
     },
     {
         "Name":  "usefull1.ps1",

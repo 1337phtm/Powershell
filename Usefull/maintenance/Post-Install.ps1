@@ -3,14 +3,7 @@
     [switch]$Test
 )
 
-$Global:StatusCounters = @{
-    SUCCESS = 0
-    ERROR   = 0
-    SKIP    = 0
-    INFO    = 0
-    TEST    = 0
-    USER    = 0
-}
+. $PSScriptRoot\..\Setup.ps1 -LogName $PSCommandPath
 
 function Write-Status {
     param(
@@ -27,16 +20,16 @@ function Write-Status {
         "TEST" { Write-Host " [$timestamp] T $Message" -ForegroundColor Magenta }
         "USER" { Write-Host " [$timestamp] U $Message" -ForegroundColor White }
     }
+
+    # LOG AUTOMATIQUE
+    $logEntry = "[$timestamp] [$Type] $Message"
+    Add-Content -Path $Global:LogFile -Value $logEntry -Force
+
+    if ($Type -eq "ERROR") {
+        Add-Content -Path $Global:ErrorLogFile -Value $logEntry -Force
+    }
 }
 
-function Show-SectionHeader {
-    param([string]$Title)
-    Write-Host ""
-    Write-Host "╔══════════════════════════════════════════╗" -ForegroundColor Blue
-    Write-Host "║ $Title" -ForegroundColor Blue
-    Write-Host "╚══════════════════════════════════════════╝" -ForegroundColor Blue
-    Write-Host ""
-}
 
 function Set-RegistryValueSafe {
     [CmdletBinding()]
@@ -743,19 +736,15 @@ Write-Host "║               ✅ CONFIGURATION TERMINÉE              ║" -For
 Write-Host "╚══════════════════════════════════════════════════════╝`n" -ForegroundColor Green
 
 if ($StatusCounters.TEST -gt 0) {
-    Write-Host "  [TEST] : $($StatusCounters.TEST) settings skipped" -ForegroundColor Magenta
+    Write-Host " [TEST] : $($StatusCounters.TEST) settings skipped" -ForegroundColor Magenta
 }
 if ($StatusCounters.USER -gt 0) {
-    Write-Host "  [USER] : $($StatusCounters.USER) settings skipped" -ForegroundColor White
+    Write-Host " [USER] : $($StatusCounters.USER) settings skipped" -ForegroundColor White
 }
-Write-Host ""
-Write-Host "  ✓ SUCCESS : $($StatusCounters.SUCCESS)" -ForegroundColor Green
-Write-Host "  - SKIP    : $($StatusCounters.SKIP)" -ForegroundColor Yellow
-Write-Host "  → INFO    : $($StatusCounters.INFO)" -ForegroundColor Cyan
-Write-Host "  ✗ ERROR   : $($StatusCounters.ERROR)" -ForegroundColor Red
+
+Show-Counters
 
 if (-not $Test) {
-    Write-Host ""
     Write-Host "🚨 REDÉMARRAGE REQUIS POUR APPLIQUER TOUTES LES MODIFICATIONS 🚨`n" -ForegroundColor Red
     $choice = Read-Host "Redémarrer maintenant ? (O/N)"
     if ($choice -match "^[oOyY]") {
@@ -764,11 +753,10 @@ if (-not $Test) {
         Restart-Computer -Force
     }
     else {
-        Write-Host "`n⚠️  Redémarrez manuellement ultérieurement`n" -ForegroundColor Yellow
+        Write-Host "⚠️  Redémarrez manuellement ultérieurement`n" -ForegroundColor Yellow
     }
 }
 else {
-    Write-Host ""
     Write-Status TEST "Test terminé - Aucun redémarrage requis`n"
 }
 
