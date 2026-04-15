@@ -12,6 +12,8 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administra
 }
 
 . $PSScriptRoot\Setup.ps1
+$compt = 0
+
 
 Show-SectionHeader "Installation OpenSSH Client"
 
@@ -34,6 +36,7 @@ if ($sshClient.State -eq "NotPresent") {
 elseif ($sshClient.State -eq "Installed") {
     Write-Host ""
     Write-Status SKIP "OpenSSH Client déjà installé"
+    $compt += 1
 }
 else {
     Write-Host ""
@@ -51,11 +54,28 @@ if ($sshAgent) {
     else {
         Write-Host ""
         Write-Status SUCCESS "Service SSH déjà configuré"
+        $compt += 1
     }
 }
 
+if ($compt -ne 2) {
+    Write-Host ""
+    Write-Status SUCCESS "OpenSSH Client installé et actif" -ForegroundColor Green
+}
+
+if (Test-Path "$env:USERPROFILE\.ssh\id_*") {
+    Write-Host ""
+    Write-Status SKIP "Clé SSH déjà présente"
+}
+else {
+    Write-Host ""
+    ssh-keygen
+    Write-Status INFO "Génération d'une nouvelle paire de clés SSH..."
+}
+
 Write-Host ""
-Write-Status SUCCESS "OpenSSH Server installé et actif" -ForegroundColor Green
+ssh-add
+
 Write-Host ""
 Write-Status INFO "Cette fenêtre se fermera automatiquement dans 10 secondes"
 Write-Host ""

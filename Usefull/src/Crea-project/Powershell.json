@@ -20,6 +20,10 @@
     "category": "Folder"
   },
   {
+    "name": "src",
+    "category": "Folder"
+  },
+  {
     "name": "README.md",
     "category": "File"
   },
