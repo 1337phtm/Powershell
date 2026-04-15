@@ -11,7 +11,7 @@
     Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Cyan
     Write-Host ""
 
-    $clonePath = "C:\Repos"
+    $clonePath = Read-Host "Path :"
     if (-not (Test-Path $clonePath)) {
         New-Item -ItemType Directory -Path $clonePath | Out-Null
     }
