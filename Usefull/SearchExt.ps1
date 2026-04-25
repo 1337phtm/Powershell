@@ -1,6 +1,6 @@
 ﻿Clear-Host
 
-. $PSScriptRoot\Setup.ps1
+. $PSScriptRoot\src\Setup.ps1 -LogName $PSCommandPath
 
 Show-SectionHeader "Search for files with specific extension"
 

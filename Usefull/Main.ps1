@@ -1,6 +1,6 @@
 ﻿param(
     [string]$FolderPath = $PSScriptRoot,
-    [string]$JsonFile = "$PSScriptRoot\src\scripts_status.json"
+    [string]$JsonFile = "$PSScriptRoot\data\scripts_status.json"
 )
 
 . $PSScriptRoot\src\Setup.ps1 -LogName $PSCommandPath
@@ -97,11 +97,7 @@ switch ($choice) {
             $selectedItem = $jsonContent[$index]
 
             Clear-Host
-            Write-Host ""
-            Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Blue
-            Write-Host "║ You selected file : $($selectedItem.Name)" -ForegroundColor Blue
-            Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Blue
-            Write-Host ""
+            Show-SectionHeader -Title "Running $($selectedItem.Name)"
 
             & "$FolderPath\$($selectedItem.Name)"
         }
@@ -111,4 +107,3 @@ switch ($choice) {
         }
     }
 }        $jsonContent += $newEntry
-

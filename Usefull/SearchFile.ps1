@@ -1,6 +1,6 @@
 ﻿Clear-Host
 
-. $PSScriptRoot\Setup.ps1
+. $PSScriptRoot\src\Setup.ps1
 
 Show-SectionHeader "Search for files"
 
