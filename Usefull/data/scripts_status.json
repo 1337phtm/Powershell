@@ -32,10 +32,6 @@
         "Status":  "?"
     },
     {
-        "Name":  "Main.ps1",
-        "Status":  "?"
-    },
-    {
         "Name":  "Make-.exe.ps1",
         "Status":  "?"
     },
@@ -81,6 +77,10 @@
     },
     {
         "Name":  "Organize-Project.ps1",
+        "Status":  "?"
+    },
+    {
+        "Name":  "Powershell.ps1",
         "Status":  "?"
     },
     {

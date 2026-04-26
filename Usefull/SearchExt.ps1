@@ -14,7 +14,7 @@ Show-SectionHeader "Select a drive to scan for *.$ext files"
 # Affichage des lecteurs disponibles
 #======================================================================
 for ($i = 0; $i -lt $drives.Count; $i++) {
-    Write-Host "[$($i+1)] $($drives[$i].Root)" -ForegroundColor Yellow
+    Write-Host "[$($i+1)] $($drives[$i].Root)" -ForegroundColor Cyan
     Write-Host ""
 }
 
@@ -36,24 +36,25 @@ switch ($drivechoice.ToUpper()) {
     }
 
     "A" {
-        Write-Host ""
         Show-SectionHeader "Searching for *.$ext in all drives"
 
         foreach ($drive in $drives) {
-            Write-Host ""
-            Write-Host "Scanning $($drive.Root) ..." -ForegroundColor Yellow
+            Write-Status INFO "Scanning $($drive.Root) ..." -ForegroundColor Cyan
             Write-Host ""
             $files = Get-ChildItem -Path $drive.Root -Filter "*.$ext" -Recurse -ErrorAction SilentlyContinue -Force
             if ($files.count -eq 0) {
-                Write-Status "INFO" "No *.$ext files found in $($selectedDrive.Root)"
+                Write-Status SKIP "No *.$ext files found in $($drive.Root)"
+                Write-Host ""
             }
             else {
-                $files | ForEach-Object { Write-Host $_.FullName }
+                foreach ($file in $files) {
+                    Write-Status SUCCESS "$($file.FullName)"
+                }
+                Write-Host ""
             }
         }
         return
     }
-
     default {
         # Convertit le choix en index (1 → 0, 2 → 1, etc.)
         $index = [int]$drivechoice - 1
@@ -72,10 +73,13 @@ switch ($drivechoice.ToUpper()) {
 
             $files = Get-ChildItem -Path $selectedDrive.Root -Filter "*.$ext" -Recurse -ErrorAction SilentlyContinue
             if ($files.count -eq 0) {
-                Write-Status "INFO" "No *.$ext files found in $($selectedDrive.Root)`n"
+                Write-Status SKIP "No *.$ext files found in $($selectedDrive.Root)`n"
             }
             else {
-                $files | ForEach-Object { Write-Host $_.FullName }
+                foreach ($file in $files) {
+                    Write-Status SUCCESS "$($file.FullName)"
+                }
+                Write-Host ""
             }
         }
         else {

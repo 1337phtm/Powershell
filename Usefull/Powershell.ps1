@@ -56,54 +56,59 @@ foreach ($f in $files) {
 # 7. Sauvegarder le JSON nettoyé et mis à jour
 $jsonContent | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 $JsonFile
 
-Clear-Host
 
-Show-SectionHeader "Select a script to run"
+do {
+    Clear-Host
+    Show-SectionHeader "Select a script to run"
 
-for ($i = 0; $i -lt $jsonContent.Count; $i++) {
-    $currentEntry = $jsonContent[$i]
-    $statusSymbol = switch ($currentEntry.Status.ToUpper()) {
-        "✓" { "✓"; break } #OK
-        "→" { "→"; break } # EN cours
-        "✗" { "✗"; break } #A Faire
-        default { "?" }
+    for ($i = 0; $i -lt $jsonContent.Count; $i++) {
+        $currentEntry = $jsonContent[$i]
+        $statusSymbol = switch ($currentEntry.Status.ToUpper()) {
+            "✓" { "✓"; break } #OK
+            "→" { "→"; break } # EN cours
+            "✗" { "✗"; break } #A Faire
+            default { "?" }
+        }
+
+        $statusColor = switch ($currentEntry.Status.ToUpper()) {
+            "✓" { "Green" }
+            "→" { "Yellow" }
+            "✗" { "Red" }
+            default { "Gray" }
+        }
+
+        Write-Host "[$($i+1)] $statusSymbol $($currentEntry.Name)" -ForegroundColor $statusColor
     }
 
-    $statusColor = switch ($currentEntry.Status.ToUpper()) {
-        "✓" { "Green" }
-        "→" { "Yellow" }
-        "✗" { "Red" }
-        default { "Gray" }
-    }
+    Write-Host ""
+    Write-Host "[0] Exit" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Status INFO "Found $($jsonContent.Count) script(s) in $PSScriptRoot`n"
 
-    Write-Host "[$($i+1)] $statusSymbol $($currentEntry.Name)" -ForegroundColor $statusColor
-}
 
-Write-Host ""
-Write-Host "[0] Exit" -ForegroundColor DarkGray
-Write-Host ""
-Write-Status INFO "Found $($jsonContent.Count) script(s) in $PSScriptRoot`n"
 
-$choice = Read-Host "Enter your choice"
 
-switch ($choice) {
-    "0" {
-        Clear-Host
-        return
-    }
-    default {
-        if ($choice -match '^\d+$' -and [int]$choice -ge 1 -and [int]$choice -le $jsonContent.Count) {
-            $index = [int]$choice - 1
-            $selectedItem = $jsonContent[$index]
-
+    $choice = Read-Host "Enter your choice"
+    switch ($choice) {
+        "0" {
             Clear-Host
-            Show-SectionHeader -Title "Running $($selectedItem.Name)"
-
-            & "$FolderPath\$($selectedItem.Name)"
+            return
         }
-        else {
-            Write-Host "Invalid choice!" -ForegroundColor Red
-            Read-Host "Press Enter to continue"
+        default {
+            if ($choice -match '^\d+$' -and [int]$choice -ge 1 -and [int]$choice -le $jsonContent.Count) {
+                $index = [int]$choice - 1
+                $selectedItem = $jsonContent[$index]
+
+                Clear-Host
+                Show-SectionHeader -Title "Running $($selectedItem.Name)"
+
+                & "$FolderPath\$($selectedItem.Name)"
+            }
+            else {
+                Write-Status ERROR "Invalid choice ! Please enter a number between 0 and $($jsonContent.Count)."
+                Pause
+            }
         }
     }
-}        $jsonContent += $newEntry
+} until ($choice -eq "0")
+$jsonContent += $newEntry
