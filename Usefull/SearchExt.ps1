@@ -2,7 +2,7 @@
 
 . $PSScriptRoot\src\Setup.ps1 -LogName $PSCommandPath
 
-Show-SectionHeader "Search for files with specific extension"
+Show-SectionHeader "Search files by extension"
 
 $ext = Read-Host "Enter the file extension to search (.kdbx, .txt, .jpg, etc.) "
 $ext = $ext.TrimStart(".")   # Normalisation de l'extension
@@ -36,10 +36,10 @@ switch ($drivechoice.ToUpper()) {
     }
 
     "A" {
-        Show-SectionHeader "Searching for *.$ext in all drives"
+        Show-SectionHeader "Searching for *.$($ext) in all drives"
 
         foreach ($drive in $drives) {
-            Write-Status INFO "Scanning $($drive.Root) ..." -ForegroundColor Cyan
+            Write-Status INFO "Scanning $($drive.Root) ..."
             Write-Host ""
             $files = Get-ChildItem -Path $drive.Root -Filter "*.$ext" -Recurse -ErrorAction SilentlyContinue -Force
             if ($files.count -eq 0) {
@@ -50,10 +50,8 @@ switch ($drivechoice.ToUpper()) {
                 foreach ($file in $files) {
                     Write-Status SUCCESS "$($file.FullName)"
                 }
-                Write-Host ""
             }
         }
-        return
     }
     default {
         # Convertit le choix en index (1 → 0, 2 → 1, etc.)
@@ -69,7 +67,7 @@ switch ($drivechoice.ToUpper()) {
             Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Blue
             Write-Host ""
 
-            Write-Status Info "Searching for *.$ext in $($selectedDrive.Root) ...`n"
+            Write-Status INFO "Searching for *.$ext in $($selectedDrive.Root) ...`n"
 
             $files = Get-ChildItem -Path $selectedDrive.Root -Filter "*.$ext" -Recurse -ErrorAction SilentlyContinue
             if ($files.count -eq 0) {
@@ -83,8 +81,9 @@ switch ($drivechoice.ToUpper()) {
             }
         }
         else {
-            Write-Host "Invalid choice." -ForegroundColor Red
+            Write-Status ERROR "Invalid choice."
             return
         }
     }
 }
+Pause

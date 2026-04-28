@@ -2,7 +2,7 @@
 
 . $PSScriptRoot\src\Setup.ps1
 
-Show-SectionHeader "Search for files"
+Show-SectionHeader "Search files"
 
 $file = Read-Host "Enter a file to search "
 $drives = Get-PSDrive -PSProvider FileSystem
@@ -13,7 +13,7 @@ Show-SectionHeader "Select a drive to scan"
 # Affichage des lecteurs disponibles
 #======================================================================
 for ($i = 0; $i -lt $drives.Count; $i++) {
-    Write-Host "[$($i+1)] $($drives[$i].Name) :  $($drives[$i].Root)" -ForegroundColor Yellow
+    Write-Host "[$($i+1)] $($drives[$i].Root)" -ForegroundColor Cyan
     Write-Host ""
 }
 
@@ -35,21 +35,22 @@ switch ($drivechoice.ToUpper()) {
     }
 
     "A" {
-        Show-SectionHeader "Scanning all drives"
+        Show-SectionHeader "Searching $($file) in all drives"
 
         foreach ($drive in $drives) {
-            Write-Host ""
-            Write-Status Info "Scanning $($drive.Root) ..."
+            Write-Status INFO "Scanning $($drive.Root) ..."
             Write-Host ""
             $files = Get-ChildItem -Path $drive.Root -Filter "$($file)*.*" -Recurse -ErrorAction SilentlyContinue -Force
             if ($files.count -eq 0) {
-                Write-Status "INFO" "No $file files found in $($drive.Root)"
+                Write-Status SKIP "No $file files found in $($drive.Root)"
+                Write-Host ""
             }
             else {
-                $files | ForEach-Object { Write-Host $_.FullName }
+                foreach ($fich in $files) {
+                    Write-Status SUCCESS "$($fich.FullName)"
+                }
             }
         }
-        return
     }
 
     default {
@@ -59,25 +60,31 @@ switch ($drivechoice.ToUpper()) {
         if ($index -ge 0 -and $index -lt $drives.Count) {
             $selectedDrive = $drives[$index]
 
-            Write-Host "`n╔══════════════════════════════════════╗" -ForegroundColor Blue
+            Write-Host ""
+            Write-Host "╔══════════════════════════════════════╗" -ForegroundColor Blue
             Write-Host "║ You selected drive : $($selectedDrive.Name)               ║" -ForegroundColor Blue
             Write-Host "║ Path : $($selectedDrive.Root)                           ║" -ForegroundColor Blue
-            Write-Host "╚══════════════════════════════════════╝`n" -ForegroundColor Blue
+            Write-Host "╚══════════════════════════════════════╝" -ForegroundColor Blue
+            Write-Host ""
 
-            Write-Status Info "Searching for $file in $($selectedDrive.Root) ...`n"
+            Write-Status INFO "Searching for $file in $($selectedDrive.Root) ...`n"
 
             $files = Get-ChildItem -Path $selectedDrive.Root -Filter "*$($file)*.*" -Recurse -ErrorAction SilentlyContinue
 
             if ($files.count -eq 0) {
-                Write-Status "INFO" "No $file files found in $($selectedDrive.Root)"
+                Write-Status SKIP "No $file files found in $($selectedDrive.Root)"
             }
             else {
-                $files | ForEach-Object { Write-Host $_.FullName }
+                foreach ($fich in $files) {
+                    Write-Status SUCCESS "$($fich.FullName)"
+                }
+                Write-Host ""
             }
         }
         else {
-            Write-Host "Invalid choice." -ForegroundColor Red
+            Write-Status ERROR "Invalid choice."
             return
         }
     }
 }
+Pause
