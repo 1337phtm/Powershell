@@ -11,9 +11,8 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltinRole]::Administra
     exit
 }
 
-. $PSScriptRoot\Setup.ps1
+. $PSScriptRoot\src\Setup.ps1
 $compt = 0
-
 
 Show-SectionHeader "Installation OpenSSH Client"
 
@@ -73,6 +72,8 @@ else {
     Write-Status INFO "Génération d'une nouvelle paire de clés SSH..."
 }
 
+Write-Host ""
+Write-Status INFO "Ajout de la clé à l'agent SSH"
 Write-Host ""
 ssh-add
 
