@@ -1,6 +1,6 @@
 ﻿param([string]$Network = "192.168.1")
 
-. "$PSScriptRoot\setup.ps1"
+. "$PSScriptRoot\src\setup.ps1"
 Show-SectionHeader "Scan réseau $Network.0/24 lancé"
 
 $functionBlock = {
