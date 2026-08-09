@@ -4,7 +4,7 @@
     [int]$Size = 500
 )
 
-. ".\Setup.ps1"
+. ".\src\Setup.ps1"
 
 $OutputPath = "$env:USERPROFILE\Downloads"
 

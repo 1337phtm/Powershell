@@ -57,7 +57,7 @@
     },
     {
         "Name":  "New-QrCode.ps1",
-        "Status":  "✓"
+        "Status":  "✗"
     },
     {
         "Name":  "New-WifiQrCode.ps1",
@@ -130,6 +130,10 @@
     {
         "Name":  "snorlabel.ps1",
         "Status":  "✓"
+    },
+    {
+        "Name":  "test.ps1",
+        "Status":  "?"
     },
     {
         "Name":  "usefull1.ps1",
