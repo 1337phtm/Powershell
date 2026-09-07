@@ -1,4 +1,6 @@
-﻿Clear-Host
+﻿# Exclure dossier du type system32 etc ou un fichier ne serait pas enregistré
+
+Clear-Host
 
 . $PSScriptRoot\src\Setup.ps1
 
