@@ -1,4 +1,7 @@
-﻿# option 5 : vérifier config réseau
+﻿# if masque ou @ip = pb 
+#   alors write-host error masque ou ip mauvaise ou deja utilisé
+# GESTION D'ERREUR
+# option 5 : vérifier config réseau
 # dans option ajouter :
 #   si passerelle alors ne pas demander 
 #   sinon 
