@@ -1,10 +1,16 @@
-﻿# if masque ou @ip = pb 
+﻿# if masque ou @ip = pb
 #   alors write-host error masque ou ip mauvaise ou deja utilisé
 # GESTION D'ERREUR
 # option 5 : vérifier config réseau
 # dans option ajouter :
-#   si passerelle alors ne pas demander 
-#   sinon 
+#   si passerelle alors ne pas demander
+#   sinon
+
+
+# PB avec All dans delete IP
+# 169.254 en boucle apres avoir delete
+# pb quand aucune ip présente
+# gestion erreur d'ip (plage 192.168.1.0/24 et met 10.0.0.0/16) mais voir car utile
 
 Clear-Host
 
@@ -47,6 +53,7 @@ function Show-MainMenu {
     Write-Host "[2]  Modifier adresse IPv4" -ForegroundColor Yellow
     Write-Host "[3]  Supprimer adresse IPv4" -ForegroundColor Red
     Write-Host "[4]  DHCP mode" -ForegroundColor Blue
+    Write-Host "[5]  IP List"
     Write-Host ""
     Write-Host "[0]  Exit" -ForegroundColor DarkGray
     Write-Host ""
@@ -68,10 +75,10 @@ function Add-IPAddress {
 function ModifIPv4 {
     Clear-Host
     Show-SectionHeader "Modifier addresse IPv4"
-    $ifAlias = Read-Host "Interface souhaité : Ethernet ou Wifi " 
+    $ifAlias = Read-Host "Interface souhaité : Ethernet ou Wifi "
     Write-Host
     $ips = Get-NetIPAddress -InterfaceAlias $ifAlias -AddressFamily IPv4 | Select-Object IPAddress, InterfaceIndex, AddressFamily, PrefixLength
-    if($ips.count -gt 1) {
+    if ($ips.count -gt 1) {
         for ($i = 0; $i -lt $ips.Count; $i++) {
             Write-Host "[$($i+1)] $($ips[$i].IPAddress)" -ForegroundColor Cyan
             Write-Host ""
@@ -117,7 +124,7 @@ function ModifIPv4 {
         Write-Host "Actual IP : $($ips.IPAddress)" -ForegroundColor Cyan
         Write-Host ""
         $ip = Read-Host "Enter new IPv4 address "
-        $cidr = Read-Host "Enter CIDR mask (Exemple : 24) " 
+        $cidr = Read-Host "Enter CIDR mask (Exemple : 24) "
         Remove-NetIPAddress -InterfaceAlias $ifalias -AddressFamily IPv4 -Confirm:$false -ErrorAction SilentlyContinue
         New-NetIPAddress -InterfaceAlias $ifAlias -AddressFamily IPV4 -IPAddress $ip -PrefixLength $cidr #-DefaultGateway $gateway
     }
@@ -126,18 +133,45 @@ function ModifIPv4 {
 function Remove-IPAddress {
     Clear-Host
     Show-SectionHeader "Supprimer addresse IPv4"
-    $ifAlias = Read-Host "Interface souhaité : Ethernet ou Wifi " 
+    $ifAlias = Read-Host "Interface souhaité : Ethernet ou Wifi "
     Write-Host
     $ips = Get-NetIPAddress -InterfaceAlias $ifAlias -AddressFamily IPv4 | Select-Object IPAddress, InterfaceIndex, AddressFamily, PrefixLength
-    if($ips.count -gt 1) {
+    if ($ips.count -gt 1) {
         for ($i = 0; $i -lt $ips.Count; $i++) {
             Write-Host "[$($i+1)] $($ips[$i].IPAddress)" -ForegroundColor Cyan
             Write-Host ""
         }
-        $choice = Read-Host "Are you sure you want to delete all of these IP address [y/n] "
-        if($choice -match "^[oOyY]") {
-            Remove-NetIPAddress -InterfaceAlias $ifalias -AddressFamily IPv4 -Confirm:$false
-            Pause
+        Write-Host "[A] All IPs" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "[0] Exit" -ForegroundColor DarkGray
+        Write-Host ""
+
+        $choice = Read-Host "Which IP you want to delete "
+        switch ($choice.ToUpper()) {
+            "0" {
+                Clear-Host
+                return
+            }
+            "A" {
+                Pause
+                Remove-NetIPAddress -InterfaceAlias $ifalias -AddressFamily IPv4 -Confirm:$false
+                Pause
+                Write-Status Success "Toutes les IPs ont été supprimées"
+            }
+            default {
+                $index = [int]$choice - 1
+                if ($index -ge 0 -and $index -lt $ips.Count) {
+                    $selectedIPs = $ips[$index]
+                    Remove-NetIPAddress -InterfaceAlias $ifalias -IPAddress $($selectedIPs.IPAddress) -AddressFamily IPv4 -Confirm:$false
+                    Write-Status Success "IP $($selectedIPs.IPAddress) successfully deleted"
+                    Pause
+                    return
+                }
+                else {
+                    Write-Status ERROR "Invalid choice."
+                    return
+                }
+            }
         }
         else {
             Write-Status ERROR "Invalid choice."
@@ -149,7 +183,7 @@ function Remove-IPAddress {
         Write-Host "Actual IP : $($ips.IPAddress)" -ForegroundColor Cyan
         Write-Host ""
         $choice = Read-Host "Are you sure you want to delete this IP address [y/n] "
-        if($choice -match "^[oOyY]") {
+        if ($choice -match "^[oOyY]") {
             Remove-NetIPAddress -InterfaceAlias $ifalias -AddressFamily IPv4 -Confirm:$false
             Pause
         }
@@ -157,9 +191,9 @@ function Remove-IPAddress {
 }
 <#
 
-FAIRE UN SOUS MENU AVEC : 
+FAIRE UN SOUS MENU AVEC :
     quand affichage de toutes les @ip demander quoi faire :
-        supprimer une 
+        supprimer une
         supprimer plusieurs
             si une seule @ip :
                 demande si veut bien supprimers
@@ -195,6 +229,19 @@ Passer en DHCP :
 - Set-DnsClientServerAddress -InterfaceAlias Ethernet -ResetServerAddresses
 #>
 
+function listerip {
+    Clear-Host
+    Show-SectionHeader "Address IP List"
+    $ipAddress = Get-NetIPAddress -AddressFamily IPv4 | Select-Object InterfaceAlias, IPAddress, AddressFamily, PrefixLength
+
+    for ($i = 0; $i -lt $ipAddress.Count; $i++) {
+        $pi = $ipAddress[$i]
+        Write-Host "[$($i+1)] $($pi.InterfaceAlias) : $($pi.IPAddress)/$($pi.PrefixLength)" -ForegroundColor Cyan
+        Write-Host ""
+    }
+    Pause
+}
+
 do {
     Show-MainMenu
     $choice = Read-Host "Choose an option"
@@ -210,6 +257,9 @@ do {
         }
         "4" {
             DHCPMode
+        }
+        "5" {
+            listerip
         }
         "0" {
             Clear-Host
