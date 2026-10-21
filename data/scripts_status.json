@@ -53,7 +53,7 @@
     },
     {
         "Name":  "Modif-IPv4.ps1",
-        "Status":  "?"
+        "Status":  "→"
     },
     {
         "Name":  "Network-Scanner.ps1",
@@ -137,7 +137,7 @@
     },
     {
         "Name":  "test.ps1",
-        "Status":  "?"
+        "Status":  "→"
     },
     {
         "Name":  "usefull1.ps1",
